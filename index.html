@@ -1,0 +1,1884 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Thomas Pastèque — Principal Product Owner IA &amp; Data · Dossier de compétence</title>
+<link href="./vendor/inter.css" rel="stylesheet">
+<script>
+  // Pre-resolve avatar gender BEFORE the body renders, so the correct portrait
+  // shows on first paint (no flash of homme then femme).
+  window.__avatarGender = (function () {
+    try { return localStorage.getItem('dossier-template-avatar-gender-v1') === 'femme' ? 'femme' : 'homme'; }
+    catch (e) { return 'homme'; }
+  })();
+</script>
+<style>
+  :root {
+    --red-poppy: #F8485E;
+    --red-poppy-soft: #FEEDEF;
+    --fresh-mint: #22D69B;
+    --fresh-mint-soft: #E8FBF4;
+    --text-dark: #1F2937;
+    --text-soft: #6B7280;
+    --border-soft: 1px solid #E5E7EB;
+    --shadow-soft: 0 8px 24px rgba(31, 41, 55, 0.08);
+    --shadow-strong: 0 12px 40px rgba(31, 41, 55, 0.18);
+    --cream: #FBF5EC;
+    --cream-deep: #F1E7D4;
+    --sage: #D7E8D2;
+    --sage-deep: #B7D4AE;
+    --lavender: #DDD6F0;
+    --lavender-deep: #BFB3E0;
+    --axa-blue: #D7E1F2;
+    --axa-blue-deep: #1E3A8A;
+    --orange-pop: #FFE0C7;
+    --orange-pop-deep: #EA580C;
+    --total-red: #FCD9D6;
+    --total-red-deep: #DC2626;
+    --decathlon-violet: #E0D4F5;
+    --decathlon-violet-deep: #6D28D9;
+    --panel-w: 540px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--text-dark);
+    -webkit-font-smoothing: antialiased;
+    background: var(--cream);
+  }
+
+  /* Two-panel layout. Each panel scrolls independently — the browser routes wheel events
+     to whichever panel the cursor is over (overflow-y:auto on each child does this natively). */
+  html, body { height: 100vh; overflow: hidden; margin: 0; }
+  body { display: flex; }
+
+  /* ===== LEFT CHATBOT PANEL ===== */
+  .chatbot-panel {
+    width: var(--panel-w);
+    flex-shrink: 0;
+    background: #FFFFFF;
+    border-right: 2px solid var(--red-poppy-soft);
+    display: flex; flex-direction: column;
+    padding: 24px 20px;
+    box-shadow: var(--shadow-soft);
+    z-index: 30;
+    overflow-y: auto;
+    overflow-x: hidden;
+    height: 100vh;
+  }
+  .panel-title { font-size: 22px; font-weight: 800; color: var(--text-dark); line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 4px; }
+  .panel-title .accent { color: var(--red-poppy); }
+  .panel-subtitle { font-size: 12px; font-weight: 500; color: var(--text-soft); margin-bottom: 24px; line-height: 1.4; }
+  .agent-header { display: flex; flex-direction: column; align-items: center; text-align: center; margin-bottom: 16px; }
+  .agent-avatar { width: 120px; height: 120px; margin-bottom: 8px; filter: drop-shadow(0 6px 16px rgba(248, 72, 94, 0.18)); animation: breathe 6.5s ease-in-out infinite; object-fit: contain; transform-origin: 50% 100%; }
+  @keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.015); } }
+  .agent-name { font-size: 13px; font-weight: 700; color: var(--red-poppy); letter-spacing: 0.04em; text-transform: uppercase; }
+  .agent-tag { font-size: 11px; color: var(--text-soft); margin-top: 2px; }
+  .prompt-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+  .prompt-list-label { font-size: 11px; font-weight: 600; color: var(--text-soft); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
+  .prompt-button { background: #FFFFFF; border: 1.5px solid #E5E7EB; border-radius: 10px; padding: 12px 14px; font-family: inherit; font-size: 13px; font-weight: 500; color: var(--text-dark); text-align: left; cursor: pointer; transition: all 0.18s ease; display: flex; align-items: center; gap: 10px; }
+  .prompt-button::before { content: ''; width: 6px; height: 6px; background: var(--fresh-mint); border-radius: 50%; flex-shrink: 0; }
+  .prompt-button:hover { border-color: var(--red-poppy); background: var(--red-poppy-soft); transform: translateX(2px); }
+  .input-wrapper { margin-top: auto; padding-top: 16px; }
+  .input-row { display: flex; gap: 8px; background: #F9FAFB; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 10px 12px; transition: border-color 0.18s ease; }
+  .input-row:focus-within { border-color: var(--red-poppy); background: #FFFFFF; }
+  .input-row input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 14px; color: var(--text-dark); }
+  .input-row input::placeholder { color: var(--text-soft); }
+  .send-button { background: var(--red-poppy); color: #FFFFFF; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; transition: transform 0.15s ease; flex-shrink: 0; }
+  .send-button:hover:not(:disabled) { transform: translateX(2px); }
+  .send-button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .input-row input:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ===== CHAT HISTORY (WhatsApp-style) ===== */
+  .chat-history { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 320px; overflow-y: auto; padding-right: 4px; scroll-behavior: smooth; }
+  .chat-history:empty { display: none; }
+  .chatbot-panel.chat-active .prompt-list { display: none; }
+  .chatbot-panel.chat-active .chat-history { max-height: none; flex: 1 1 auto; min-height: 0; margin-bottom: 8px; }
+  .chat-history::-webkit-scrollbar { width: 4px; }
+  .chat-history::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 999px; }
+  .chat-bubble { max-width: 85%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.45; word-wrap: break-word; white-space: pre-wrap; animation: bubble-in 200ms ease-out; }
+  .chat-bubble.user { align-self: flex-start; background: #F3F4F6; color: var(--text-dark); border-bottom-left-radius: 4px; }
+  .chat-bubble.ai { align-self: flex-end; background: var(--red-poppy-soft); color: var(--text-dark); border-bottom-right-radius: 4px; border-left: 2px solid var(--red-poppy); }
+  .chat-bubble.error { align-self: flex-end; background: #FEEDEF; color: var(--red-poppy); border-bottom-right-radius: 4px; border-left: 2px solid var(--red-poppy); font-style: italic; }
+  .chat-bubble strong { font-weight: 700; }
+  .chat-bubble em { font-style: italic; }
+  .chat-bubble code { background: rgba(0,0,0,0.05); padding: 1px 5px; border-radius: 4px; font-size: 12px; font-family: ui-monospace, monospace; }
+  .chat-bubble.typing { display: flex; gap: 4px; align-items: center; padding: 12px 14px; }
+  .chat-bubble.typing span { width: 6px; height: 6px; background: var(--red-poppy); border-radius: 50%; opacity: 0.4; animation: typing-dot 1.2s infinite; }
+  .chat-bubble.typing span:nth-child(2) { animation-delay: 0.2s; }
+  .chat-bubble.typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes typing-dot { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+  @keyframes bubble-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+  .clear-chat-btn { display: inline-flex; align-items: center; gap: 6px; background: transparent; border: 1px solid rgba(31, 41, 55, 0.08); color: var(--text-soft); font-size: 11px; font-weight: 600; cursor: pointer; padding: 6px 12px; border-radius: 999px; align-self: center; margin-bottom: 8px; transition: all 0.15s ease; }
+  .clear-chat-btn:hover { background: var(--red-poppy-soft); color: var(--red-poppy); border-color: rgba(248, 72, 94, 0.3); }
+  .clear-chat-btn .lucide { width: 13px; height: 13px; flex-shrink: 0; }
+  .chat-history:empty + .clear-chat-btn { display: none; }
+  .send-spinner { width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ===== CONFIRM MODAL (custom — replaces native confirm()) ===== */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    display: grid; place-items: center;
+    z-index: 200;
+    opacity: 0; pointer-events: none;
+    transition: opacity 180ms ease;
+  }
+  .modal-overlay.visible { opacity: 1; pointer-events: auto; }
+  .modal-card {
+    background: #FFFFFF;
+    border-radius: 18px;
+    padding: 24px 26px 20px;
+    max-width: 380px;
+    width: calc(100% - 32px);
+    box-shadow: 0 24px 64px rgba(15, 23, 42, 0.28);
+    transform: scale(0.94);
+    transition: transform 180ms cubic-bezier(0.4, 0, 0.2, 1);
+    border-top: 4px solid var(--red-poppy);
+  }
+  .modal-overlay.visible .modal-card { transform: scale(1); }
+  .modal-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .modal-icon {
+    width: 36px; height: 36px;
+    background: var(--red-poppy-soft);
+    color: var(--red-poppy);
+    border-radius: 10px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+  }
+  .modal-title { font-size: 17px; font-weight: 800; color: var(--text-dark); letter-spacing: -0.01em; }
+  .modal-body { font-size: 14px; color: var(--text-soft); line-height: 1.55; margin-bottom: 22px; }
+  .modal-buttons { display: flex; gap: 10px; justify-content: flex-end; }
+  .modal-buttons button {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 18px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: 1.5px solid transparent;
+  }
+  .modal-buttons .modal-cancel { background: transparent; color: var(--text-dark); border-color: #E5E7EB; }
+  .modal-buttons .modal-cancel:hover { background: #F3F4F6; border-color: #D1D5DB; }
+  .modal-buttons .modal-confirm { background: var(--red-poppy); color: #FFFFFF; border-color: var(--red-poppy); box-shadow: 0 4px 12px rgba(248, 72, 94, 0.25); }
+  .modal-buttons .modal-confirm:hover { background: #E03A50; border-color: #E03A50; transform: translateY(-1px); box-shadow: 0 6px 16px rgba(248, 72, 94, 0.35); }
+  .modal-buttons button:focus-visible { outline: 2px solid var(--red-poppy); outline-offset: 2px; }
+
+  /* ===== RIGHT CONTENT PANEL (scrolly-telling) ===== */
+  .content-panel {
+    flex: 1;
+    height: 100vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scroll-behavior: smooth;
+  }
+  .content-panel::-webkit-scrollbar { width: 8px; }
+  .content-panel::-webkit-scrollbar-track { background: transparent; }
+  .content-panel::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 999px; }
+  .content-panel::-webkit-scrollbar-thumb:hover { background: #D1D5DB; }
+
+  .section { padding: 80px 64px; max-width: 1100px; margin: 0 auto; }
+  .section-label { font-size: 12px; font-weight: 700; color: var(--red-poppy); letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 12px; }
+  .section-title { font-size: 40px; font-weight: 800; letter-spacing: -0.025em; line-height: 1.1; margin-bottom: 16px; }
+
+  /* HERO */
+  .hero-brand-logo { margin-bottom: 36px; }
+  .hero-brand-logo img { height: 56px; width: auto; display: block; }
+
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 280px;
+    align-items: center;
+    gap: 48px;
+    padding: 80px 64px 60px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .hero h1 {
+    font-size: clamp(48px, 6vw, 76px);
+    font-weight: 900;
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+    color: var(--text-dark);
+  }
+  .hero h1 .accent { color: var(--red-poppy); }
+  .hero .role {
+    margin-top: 18px;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text-dark);
+    letter-spacing: -0.01em;
+  }
+  .hero .tagline {
+    margin-top: 8px;
+    font-size: 16px;
+    color: var(--text-soft);
+    line-height: 1.55;
+    max-width: 540px;
+  }
+  .hero .hero-stats {
+    margin-top: 32px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .stat-pill {
+    background: #FFFFFF;
+    border: var(--border-soft);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-dark);
+    box-shadow: var(--shadow-soft);
+  }
+  .stat-pill .num { color: var(--red-poppy); font-weight: 800; margin-right: 4px; }
+  .hero-avatar {
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: var(--cream-deep);
+    box-shadow: var(--shadow-strong);
+    position: relative;
+  }
+  .hero-avatar-img {
+    width: 100%; height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    position: relative;
+    background: var(--cream-deep);
+  }
+  .hero-avatar-img img#avatar-img { width: 100%; height: 100%; object-fit: cover; object-position: center top; transition: opacity 0.25s ease; display: block; position: relative; z-index: 2; }
+  .hero-avatar-img img#avatar-img:not([src]),
+  .hero-avatar-img img#avatar-img[src=""] { opacity: 0; }
+
+  /* ===== EYE TRACKING ===== */
+  /* Architecture: pupilles SOUS l'avatar (z-index 1).
+     L'avatar a des trous transparents au niveau des yeux — la pupille s'y voit.
+     Quand elle dépasse, l'avatar (z-index 2) la masque automatiquement. */
+  .eye-socket {
+    position: absolute;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .pupil {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 45%;
+    height: 45%;
+    object-fit: contain;
+    transform: translate(calc(-50% + var(--px, 0px)), calc(-50% + var(--py, 0px)));
+    transition: transform 0.08s ease-out;
+    will-change: transform;
+    pointer-events: none;
+    display: block;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pupil { transition: none; transform: translate(-50%, -50%); }
+  }
+
+  /* Gender toggle button — bottom-right of avatar circle */
+  .gender-toggle {
+    position: absolute;
+    bottom: 8px;
+    right: 8px;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 4px solid #FFFFFF;
+    background: #4A8FE7;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 18px rgba(31, 41, 55, 0.18);
+    transition: background 0.25s ease, transform 0.18s ease, box-shadow 0.18s ease;
+    padding: 0;
+    z-index: 2;
+  }
+  .gender-toggle:hover { transform: scale(1.06); box-shadow: 0 8px 22px rgba(31, 41, 55, 0.25); }
+  .gender-toggle:active { transform: scale(0.96); }
+  .gender-toggle.is-femme { background: #EC6FA5; }
+  .gender-toggle svg { width: 26px; height: 26px; color: #FFFFFF; transition: transform 0.25s ease; }
+  .gender-toggle:focus-visible { outline: 3px solid var(--red-poppy); outline-offset: 3px; }
+  .gender-toggle .gt-tooltip {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    background: var(--text-dark);
+    color: #FFFFFF;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 5px 10px;
+    border-radius: 8px;
+    white-space: nowrap;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease, transform 0.18s ease;
+    transform: translateY(4px);
+  }
+  .gender-toggle:hover .gt-tooltip { opacity: 1; transform: translateY(0); }
+  .hero-avatar::after {
+    content: '';
+    position: absolute;
+    inset: -12px;
+    border-radius: 50%;
+    border: 2px dashed rgba(248, 72, 94, 0.3);
+    animation: spin 30s linear infinite;
+  }
+  .scroll-cue {
+    position: absolute;
+    left: 50%; bottom: 24px;
+    transform: translateX(-50%);
+    font-size: 11px; color: var(--text-soft);
+    letter-spacing: 0.08em; text-transform: uppercase;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    pointer-events: none;
+  }
+  .scroll-cue .arrow {
+    width: 18px; height: 18px;
+    background: var(--red-poppy);
+    color: #FFFFFF;
+    border-radius: 50%;
+    display: grid; place-items: center;
+    font-size: 11px;
+    animation: bounce 1.6s ease-in-out infinite;
+  }
+  @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(4px); } }
+
+  /* BIO SECTION — clean monochromatic warm palette (cream + red-poppy only) */
+  .bio-section { padding-top: 100px; padding-bottom: 40px; }
+  .bio-card {
+    max-width: 980px;
+    margin: 0 auto;
+    background: transparent;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 40px;
+    position: relative;
+  }
+
+  /* Top horizontal stats strip */
+  .bio-stats-strip {
+    background: #FFFFFF;
+    border: 1px solid rgba(31, 41, 55, 0.06);
+    border-radius: 20px;
+    padding: 28px 32px;
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr 1px 1fr;
+    gap: 24px;
+    align-items: center;
+    box-shadow: 0 8px 24px rgba(31, 41, 55, 0.05);
+    position: relative;
+    z-index: 1;
+  }
+  .bio-stats-strip-cell {
+    text-align: center;
+  }
+  .bio-stats-strip-cell .num {
+    font-size: 54px;
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--text-dark);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+  }
+  .bio-stats-strip-cell .num .plus {
+    color: var(--red-poppy);
+    font-size: 46px;
+  }
+  .bio-stats-strip-cell .num .unit {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-left: 6px;
+  }
+  .bio-stats-strip-cell .label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-top: 10px;
+    line-height: 1.4;
+  }
+  .bio-stats-strip-vline {
+    width: 1px;
+    background: rgba(31, 41, 55, 0.08);
+    align-self: stretch;
+  }
+
+  /* Bottom: bio body 2 columns (text left, sectors right) */
+  .bio-body {
+    display: grid;
+    grid-template-columns: 1.6fr 1fr;
+    gap: 48px;
+    position: relative;
+    z-index: 1;
+  }
+  .bio-body-right {
+    border-left: 1px solid rgba(31, 41, 55, 0.08);
+    padding-left: 40px;
+  }
+  .bio-sectors-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .bio-sectors-stack .bio-sector-chip {
+    justify-content: flex-start;
+    padding: 10px 16px;
+    font-size: 14px;
+  }
+  .bio-langues-label { margin-top: 28px; }
+  .bio-content { position: relative; z-index: 1; }
+  .bio-content .section-label { color: var(--red-poppy); margin-bottom: 16px; }
+  .bio-headline {
+    font-size: clamp(32px, 4vw, 44px);
+    font-weight: 900;
+    letter-spacing: -0.03em;
+    line-height: 1.08;
+    margin-bottom: 24px;
+    color: var(--text-dark);
+  }
+  .bio-headline .bio-headline-red { color: var(--red-poppy); }
+  .bio-headline .dot { color: var(--red-poppy); }
+  .bio-paragraph {
+    font-size: 16px;
+    line-height: 1.7;
+    color: var(--text-dark);
+    margin-bottom: 14px;
+    max-width: 580px;
+  }
+  .bio-paragraph:last-of-type { margin-bottom: 0; }
+  .bio-paragraph strong { color: var(--text-dark); font-weight: 700; }
+  .bio-paragraph .hl-mint {
+    background: var(--red-poppy-soft);
+    color: var(--red-poppy);
+    padding: 2px 10px;
+    border-radius: 6px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .bio-sectors-row {
+    margin-top: 28px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(31, 41, 55, 0.08);
+  }
+  .bio-sectors-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-soft);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+  .bio-sectors {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .bio-sector-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: #FFFFFF;
+    border: 1px solid rgba(31, 41, 55, 0.08);
+    color: var(--text-dark);
+    padding: 7px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .bio-sector-chip:hover {
+    transform: translateY(-2px);
+    border-color: var(--red-poppy);
+    box-shadow: 0 4px 12px rgba(248, 72, 94, 0.15);
+  }
+  .bio-sector-icon { font-size: 14px; line-height: 1; color: var(--red-poppy); display: inline-flex; align-items: center; }
+  .bio-sector-icon .lucide { width: 16px; height: 16px; }
+  @media (max-width: 880px) {
+    .bio-card { gap: 28px; padding: 32px 24px; }
+    .bio-stats-strip {
+      grid-template-columns: 1fr;
+      gap: 20px;
+      padding: 24px;
+    }
+    .bio-stats-strip-vline { display: none; }
+    .bio-body { grid-template-columns: 1fr; gap: 32px; }
+    .bio-body-right { border-left: none; padding-left: 0; border-top: 1px solid rgba(31, 41, 55, 0.08); padding-top: 28px; }
+  }
+
+  /* JOURNEY / EXPERIENCES */
+  .journey-intro { text-align: center; padding-top: 40px; padding-bottom: 30px; }
+  .journey-intro .section-title { font-size: 36px; }
+  .journey-intro p { color: var(--text-soft); font-size: 17px; max-width: 600px; margin: 12px auto 0; line-height: 1.6; }
+
+  .experience-card {
+    margin: 0 auto 32px;
+    max-width: 980px;
+    border-radius: 28px;
+    padding: 56px 56px;
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 48px;
+    align-items: start;
+    box-shadow: 0 12px 32px rgba(31, 41, 55, 0.06);
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+    position: relative;
+    overflow: hidden;
+  }
+  .experience-card.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .experience-card.theme-sage    { background: var(--sage); }
+  .experience-card.theme-cream   { background: var(--cream-deep); }
+  .experience-card.theme-mint    { background: var(--fresh-mint-soft); }
+  .experience-card.theme-lavender { background: var(--lavender); }
+  .experience-card.theme-axa-blue { background: var(--axa-blue); }
+  .experience-card.theme-orange-pop { background: var(--orange-pop); }
+  .experience-card.theme-total-red { background: var(--total-red); }
+  .experience-card.theme-decathlon-violet { background: var(--decathlon-violet); }
+
+  .exp-year-block { display: flex; flex-direction: column; gap: 4px; }
+  .exp-year { font-size: 56px; font-weight: 900; letter-spacing: -0.04em; line-height: 0.9; color: var(--text-dark); }
+  .exp-period { font-size: 13px; font-weight: 600; color: var(--text-soft); }
+  .exp-company { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-dark); margin-bottom: 4px; }
+  .exp-role { font-size: 15px; font-weight: 600; color: var(--red-poppy); margin-bottom: 20px; }
+  .exp-metric {
+    display: inline-block;
+    background: var(--red-poppy);
+    color: #FFFFFF;
+    padding: 10px 20px;
+    border-radius: 999px;
+    font-size: 15px;
+    font-weight: 800;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 12px rgba(248, 72, 94, 0.25);
+  }
+  .experience-card.theme-mint .exp-metric { background: #0F9D6E; box-shadow: 0 4px 12px rgba(15, 157, 110, 0.25); }
+  .experience-card.theme-lavender .exp-metric { background: #6E5CC4; box-shadow: 0 4px 12px rgba(110, 92, 196, 0.25); }
+  .experience-card.theme-axa-blue .exp-metric { background: var(--axa-blue-deep); box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25); }
+  .experience-card.theme-orange-pop .exp-metric { background: var(--orange-pop-deep); box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25); }
+  .experience-card.theme-total-red .exp-metric { background: var(--total-red-deep); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); }
+  .experience-card.theme-decathlon-violet .exp-metric { background: var(--decathlon-violet-deep); box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25); }
+  .exp-description { font-size: 15px; line-height: 1.65; color: var(--text-dark); margin-bottom: 20px; max-width: 580px; }
+  .exp-stack { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .exp-stack .chip {
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text-dark);
+    padding: 5px 12px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(31, 41, 55, 0.08);
+  }
+  .exp-cta {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(31, 41, 55, 0.92);
+    color: #FFFFFF;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 999px;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+    box-shadow: 0 4px 12px rgba(31, 41, 55, 0.18);
+  }
+  .exp-cta:hover { transform: translateY(-1px); background: var(--text-dark); box-shadow: 0 6px 16px rgba(31, 41, 55, 0.28); }
+  .exp-cta:active { transform: translateY(0); }
+  .exp-cta svg { width: 14px; height: 14px; transition: transform 0.18s ease; }
+  .exp-cta:hover svg { transform: translateX(3px); }
+  .experience-card.theme-mint .exp-cta     { background: #0F9D6E; box-shadow: 0 4px 12px rgba(15, 157, 110, 0.3); }
+  .experience-card.theme-mint .exp-cta:hover { background: #0C8C62; }
+  .experience-card.theme-lavender .exp-cta { background: #6E5CC4; box-shadow: 0 4px 12px rgba(110, 92, 196, 0.3); }
+  .experience-card.theme-lavender .exp-cta:hover { background: #5C4BAC; }
+  .experience-card.theme-cream .exp-cta    { background: #B8954A; box-shadow: 0 4px 12px rgba(184, 149, 74, 0.3); }
+  .experience-card.theme-cream .exp-cta:hover { background: #A38040; }
+  .experience-card.theme-sage .exp-cta     { background: #4A8757; box-shadow: 0 4px 12px rgba(74, 135, 87, 0.3); }
+  .experience-card.theme-sage .exp-cta:hover { background: #3E7349; }
+  .experience-card.theme-axa-blue .exp-cta { background: var(--axa-blue-deep); box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3); }
+  .experience-card.theme-axa-blue .exp-cta:hover { background: #16307A; }
+  .experience-card.theme-orange-pop .exp-cta { background: var(--orange-pop-deep); box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3); }
+  .experience-card.theme-orange-pop .exp-cta:hover { background: #C7480A; }
+  .experience-card.theme-total-red .exp-cta { background: var(--total-red-deep); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
+  .experience-card.theme-total-red .exp-cta:hover { background: #B91C1C; }
+  .experience-card.theme-decathlon-violet .exp-cta { background: var(--decathlon-violet-deep); box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3); }
+  .experience-card.theme-decathlon-violet .exp-cta:hover { background: #5B21B6; }
+
+  /* ===== EXPERIENCE DETAIL MODAL ===== */
+  .exp-modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(15, 23, 42, 0.55);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: grid; place-items: center;
+    z-index: 250;
+    opacity: 0; pointer-events: none;
+    transition: opacity 220ms ease;
+    padding: 24px;
+  }
+  .exp-modal-overlay.visible { opacity: 1; pointer-events: auto; }
+  .exp-modal-card {
+    background: #FFFFFF;
+    border-radius: 24px;
+    max-width: 720px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.32);
+    transform: scale(0.94) translateY(12px);
+    transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .exp-modal-overlay.visible .exp-modal-card { transform: scale(1) translateY(0); }
+  .exp-modal-header {
+    padding: 32px 36px 28px;
+    position: relative;
+    background: var(--cream-deep);
+    border-bottom: 4px solid var(--text-dark);
+  }
+  .exp-modal-overlay[data-theme="sage"] .exp-modal-header     { background: var(--sage); border-bottom-color: #4A8757; }
+  .exp-modal-overlay[data-theme="cream"] .exp-modal-header    { background: var(--cream-deep); border-bottom-color: #B8954A; }
+  .exp-modal-overlay[data-theme="mint"] .exp-modal-header     { background: var(--fresh-mint-soft); border-bottom-color: #0F9D6E; }
+  .exp-modal-overlay[data-theme="lavender"] .exp-modal-header { background: var(--lavender); border-bottom-color: #6E5CC4; }
+  .exp-modal-overlay[data-theme="axa-blue"] .exp-modal-header { background: var(--axa-blue); border-bottom-color: var(--axa-blue-deep); }
+  .exp-modal-overlay[data-theme="orange-pop"] .exp-modal-header { background: var(--orange-pop); border-bottom-color: var(--orange-pop-deep); }
+  .exp-modal-overlay[data-theme="total-red"] .exp-modal-header { background: var(--total-red); border-bottom-color: var(--total-red-deep); }
+  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-modal-header { background: var(--decathlon-violet); border-bottom-color: var(--decathlon-violet-deep); }
+
+  .exp-modal-year-block { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
+  .exp-modal-year { font-size: 44px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: var(--text-dark); }
+  .exp-modal-period { font-size: 13px; font-weight: 600; color: var(--text-soft); }
+  .exp-modal-company { font-size: 26px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-dark); margin-bottom: 4px; }
+  .exp-modal-role { font-size: 14px; font-weight: 600; color: var(--text-soft); }
+
+  .exp-modal-close {
+    position: absolute;
+    top: 18px; right: 18px;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-dark);
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: background 0.15s ease, transform 0.15s ease;
+    box-shadow: 0 2px 8px rgba(31, 41, 55, 0.12);
+  }
+  .exp-modal-close:hover { background: #FFFFFF; transform: rotate(90deg); }
+  .exp-modal-close svg { width: 16px; height: 16px; }
+
+  .exp-modal-body {
+    padding: 28px 36px 32px;
+    overflow-y: auto;
+    flex: 1;
+  }
+  .exp-modal-body::-webkit-scrollbar { width: 6px; }
+  .exp-modal-body::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 999px; }
+  .exp-section { margin-bottom: 22px; }
+  .exp-section:last-child { margin-bottom: 0; }
+  .exp-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .exp-section-title::before {
+    content: '';
+    width: 4px; height: 14px;
+    background: var(--text-dark);
+    border-radius: 2px;
+  }
+  .exp-modal-overlay[data-theme="sage"] .exp-section-title::before     { background: #4A8757; }
+  .exp-modal-overlay[data-theme="cream"] .exp-section-title::before    { background: #B8954A; }
+  .exp-modal-overlay[data-theme="mint"] .exp-section-title::before     { background: #0F9D6E; }
+  .exp-modal-overlay[data-theme="lavender"] .exp-section-title::before { background: #6E5CC4; }
+  .exp-modal-overlay[data-theme="axa-blue"] .exp-section-title::before { background: var(--axa-blue-deep); }
+  .exp-modal-overlay[data-theme="orange-pop"] .exp-section-title::before { background: var(--orange-pop-deep); }
+  .exp-modal-overlay[data-theme="total-red"] .exp-section-title::before { background: var(--total-red-deep); }
+  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-section-title::before { background: var(--decathlon-violet-deep); }
+
+  .exp-section p { font-size: 14px; line-height: 1.65; color: var(--text-dark); }
+  .exp-section ul { list-style: none; padding: 0; margin: 0; }
+  .exp-section li {
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-dark);
+    padding: 8px 0 8px 22px;
+    position: relative;
+  }
+  .exp-section li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 14px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--text-dark);
+  }
+  .exp-modal-overlay[data-theme="sage"] .exp-section li::before     { background: #4A8757; }
+  .exp-modal-overlay[data-theme="cream"] .exp-section li::before    { background: #B8954A; }
+  .exp-modal-overlay[data-theme="mint"] .exp-section li::before     { background: #0F9D6E; }
+  .exp-modal-overlay[data-theme="lavender"] .exp-section li::before { background: #6E5CC4; }
+  .exp-modal-overlay[data-theme="axa-blue"] .exp-section li::before { background: var(--axa-blue-deep); }
+  .exp-modal-overlay[data-theme="orange-pop"] .exp-section li::before { background: var(--orange-pop-deep); }
+  .exp-modal-overlay[data-theme="total-red"] .exp-section li::before { background: var(--total-red-deep); }
+  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-section li::before { background: var(--decathlon-violet-deep); }
+
+  .exp-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 600px) { .exp-metrics { grid-template-columns: 1fr; } }
+  .exp-metric-card {
+    background: var(--cream);
+    border-radius: 14px;
+    padding: 14px 16px;
+    border: 1px solid rgba(31, 41, 55, 0.06);
+  }
+  .exp-modal-overlay[data-theme="sage"] .exp-metric-card     { background: var(--sage); border-color: rgba(74, 135, 87, 0.18); }
+  .exp-modal-overlay[data-theme="cream"] .exp-metric-card    { background: var(--cream-deep); border-color: rgba(184, 149, 74, 0.18); }
+  .exp-modal-overlay[data-theme="mint"] .exp-metric-card     { background: var(--fresh-mint-soft); border-color: rgba(15, 157, 110, 0.18); }
+  .exp-modal-overlay[data-theme="lavender"] .exp-metric-card { background: var(--lavender); border-color: rgba(110, 92, 196, 0.18); }
+  .exp-modal-overlay[data-theme="axa-blue"] .exp-metric-card { background: var(--axa-blue); border-color: rgba(30, 58, 138, 0.18); }
+  .exp-modal-overlay[data-theme="orange-pop"] .exp-metric-card { background: var(--orange-pop); border-color: rgba(234, 88, 12, 0.18); }
+  .exp-modal-overlay[data-theme="total-red"] .exp-metric-card { background: var(--total-red); border-color: rgba(220, 38, 38, 0.18); }
+  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-metric-card { background: var(--decathlon-violet); border-color: rgba(109, 40, 217, 0.18); }
+  .exp-metric-value { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; color: var(--text-dark); line-height: 1.1; }
+  .exp-metric-label { font-size: 12px; color: var(--text-soft); margin-top: 4px; line-height: 1.4; }
+
+  .exp-modal-stack { display: flex; flex-wrap: wrap; gap: 8px; }
+  .exp-modal-stack .chip {
+    background: #FFFFFF;
+    border: 1px solid rgba(31, 41, 55, 0.12);
+    color: var(--text-dark);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+
+  /* SKILLS */
+  .skills-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+  .skill-category {
+    background: #FFFFFF;
+    border: var(--border-soft);
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: var(--shadow-soft);
+  }
+  .skill-category.theme-red    { background: var(--red-poppy-soft); border-color: rgba(248, 72, 94, 0.2); }
+  .skill-category.theme-mint   { background: var(--fresh-mint-soft); border-color: rgba(34, 214, 155, 0.2); }
+  .skill-category.theme-cream  { background: var(--cream-deep); border-color: rgba(241, 231, 212, 0.6); }
+  .skill-category.theme-lavender { background: var(--lavender); border-color: rgba(191, 179, 224, 0.5); }
+  .skill-cat-title { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
+  .skill-cat-title .icon { color: var(--red-poppy); display: inline-flex; align-items: center; }
+  /* Shared SVG icon style — Lucide-style line icons in red poppy */
+  .lucide { stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+  .skill-cat-title .icon .lucide { width: 22px; height: 22px; }
+  .skill-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .skill-chip {
+    background: rgba(255, 255, 255, 0.85);
+    color: var(--text-dark);
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1px solid rgba(31, 41, 55, 0.08);
+  }
+
+  /* EDUCATION & CERTIFICATIONS */
+  .ed-cert-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .ed-cert-block {
+    background: #FFFFFF;
+    border: var(--border-soft);
+    border-radius: 20px;
+    padding: 28px 32px;
+    box-shadow: var(--shadow-soft);
+  }
+  .ed-cert-block h3 { font-size: 18px; font-weight: 800; margin-bottom: 18px; display: flex; align-items: center; gap: 10px; }
+  .ed-cert-list { display: flex; flex-direction: column; gap: 14px; }
+  .ed-cert-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--cream);
+    border-radius: 12px;
+    border: 1px solid rgba(31, 41, 55, 0.06);
+  }
+  .ed-cert-item .ico {
+    width: 32px; height: 32px;
+    background: var(--red-poppy-soft);
+    border-radius: 8px;
+    display: grid; place-items: center;
+    flex-shrink: 0;
+    color: var(--red-poppy);
+  }
+  .ed-cert-item .ico .lucide { width: 16px; height: 16px; }
+  .ed-cert-block h3 .lucide { width: 18px; height: 18px; color: var(--red-poppy); vertical-align: middle; }
+  .ed-cert-item .label { font-size: 14px; font-weight: 700; color: var(--text-dark); line-height: 1.3; }
+  .ed-cert-item .meta { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+
+  /* FOOTER */
+  .site-footer {
+    text-align: center;
+    padding: 60px 32px 80px;
+    color: var(--text-soft);
+    font-size: 13px;
+    border-top: 1px solid rgba(31, 41, 55, 0.06);
+  }
+  .site-footer .name { color: var(--text-dark); font-weight: 700; margin-bottom: 4px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 980px) {
+    .hero { grid-template-columns: 1fr; padding: 60px 32px; }
+    .hero-avatar { width: 200px; height: 200px; justify-self: center; }
+    .section { padding: 60px 32px; }
+    .experience-card { grid-template-columns: 1fr; padding: 36px 28px; gap: 20px; }
+    .exp-year { font-size: 44px; }
+    .ed-cert-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 720px) {
+    body { display: block; }
+    .chatbot-panel { width: 100%; height: auto; max-height: 50vh; }
+    .content-panel { height: auto; }
+    html, body { height: auto; overflow: auto; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ================================================================
+     LEFT — CHATBOT PANEL
+     ================================================================ -->
+<aside class="chatbot-panel">
+  <div class="panel-title"><span class="accent" data-text-m="Thomas" data-text-f="Sarah">Thomas</span> Pastèque <span aria-hidden="true">🍉</span></div>
+  <div class="panel-subtitle">Principal Product Owner IA · 11 ans d'expérience</div>
+
+  <div class="agent-header">
+    <img class="agent-avatar" src="./assets/super-cat-devoteam.png" alt="Captain Moustache Devoteam — assistant IA">
+    <div class="agent-name">Captain Moustache · Assistant IA</div>
+    <div class="agent-tag">Pose-moi une question sur <span data-text-m="Thomas" data-text-f="Sarah">Thomas</span></div>
+  </div>
+
+  <div class="prompt-list">
+    <div class="prompt-list-label">Suggestions</div>
+    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez TotalEnergies via Devoteam.">Expérience Devoteam · 2024+</button>
+    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez AXA France.">Expérience AXA · 2019-2023</button>
+    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez Orange Bank.">Expérience Orange Bank · 2016-2019</button>
+    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez Decathlon.">Expérience Decathlon · 2014-2016</button>
+  </div>
+
+  <div class="chat-history" id="chat-history"></div>
+  <button class="clear-chat-btn" id="clear-chat-btn" type="button"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>Supprimer l'historique</button>
+
+  <div class="input-wrapper">
+    <div class="input-row">
+      <input type="text" id="chat-input" placeholder="Tapez votre question..." aria-label="Question pour le chatbot" maxlength="1000" />
+      <button class="send-button" id="chat-send" aria-label="Envoyer">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</aside>
+
+<!-- ================================================================
+     RIGHT — SCROLLY-TELLING CONTENT PANEL
+     ================================================================ -->
+<main class="content-panel">
+
+  <!-- HERO -->
+  <section class="hero" style="position:relative;">
+    <div>
+      <div class="hero-brand-logo"><img src="./assets/devoteam_logo_avec_texte.svg" alt="Devoteam"/></div>
+      <div style="font-size:13px; font-weight:700; color:var(--red-poppy); letter-spacing:0.12em; text-transform:uppercase; margin-bottom:16px;">Dossier de compétence</div>
+      <h1><span class="accent" data-text-m="Thomas" data-text-f="Sarah">Thomas</span><br/>Pastèque <span aria-hidden="true">🍉</span></h1>
+      <div class="role">Principal Product Owner IA &amp; Data</div>
+      <p class="tagline">11 ans à piloter des produits digitaux dans de grands groupes. Spécialisé depuis +5 ans sur les solutions Data &amp; IA : Recommandations, automatisations, NLP, GenAI</p>
+      <div class="hero-stats">
+        <div class="stat-pill"><span class="num">11</span> ans d'expérience</div>
+        <div class="stat-pill"><span class="num">4</span> expériences clés</div>
+        <div class="stat-pill"><span class="num">+5</span> ans produits IA</div>
+      </div>
+    </div>
+    <div class="hero-avatar">
+      <div class="hero-avatar-img">
+        <img id="avatar-img" alt="Portrait illustré du candidat"/>
+        <span class="eye-socket eye-left" aria-hidden="true">
+          <img class="pupil" src="./assets/avatar-portrait-pupille.png" alt=""/>
+        </span>
+        <span class="eye-socket eye-right" aria-hidden="true">
+          <img class="pupil" src="./assets/avatar-portrait-pupille.png" alt=""/>
+        </span>
+      </div>
+      <button class="gender-toggle" id="gender-toggle" type="button" aria-label="Changer le genre du portrait" title="Changer le genre">
+        <span class="gt-tooltip" id="gt-tooltip">Passer en femme</span>
+        <svg id="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
+      </button>
+      <script>
+        // Apply the pre-resolved gender SYNCHRONOUSLY so first paint shows the
+        // correct portrait, button color, icon, tooltip AND first name — no flash.
+        (function () {
+          var g = window.__avatarGender || 'homme';
+          var isFemme = g === 'femme';
+          var maleIcon = '<circle cx="10" cy="14" r="5"/><line x1="13.5" y1="10.5" x2="20" y2="4"/><polyline points="15 4 20 4 20 9"/>';
+          var femaleIcon = '<circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="22"/><line x1="9" y1="19" x2="15" y2="19"/>';
+          var img = document.getElementById('avatar-img');
+          var btn = document.getElementById('gender-toggle');
+          var icon = document.getElementById('gender-icon');
+          var tip = document.getElementById('gt-tooltip');
+          img.src = './assets/avatar-portrait-' + g + '_white-eyes_transparent.png';
+          img.alt = isFemme ? 'Portrait illustré (variante femme)' : 'Portrait illustré (variante homme)';
+          btn.classList.toggle('is-femme', isFemme);
+          icon.innerHTML = isFemme ? femaleIcon : maleIcon;
+          tip.textContent = isFemme ? 'Passer en homme' : 'Passer en femme';
+          btn.setAttribute('aria-label', isFemme ? 'Variante femme active. Cliquer pour passer en homme.' : 'Variante homme active. Cliquer pour passer en femme.');
+          // Swap any [data-text-m]/[data-text-f] elements already parsed (panel-title, agent-tag, hero name)
+          var attr = isFemme ? 'textF' : 'textM';
+          document.querySelectorAll('[data-text-m]').forEach(function (el) {
+            var v = el.dataset[attr]; if (v != null) el.textContent = v;
+          });
+          window.__currentGender = g;
+        })();
+      </script>
+    </div>
+    <div class="scroll-cue">
+      <span>Faire défiler</span>
+      <span class="arrow">↓</span>
+    </div>
+  </section>
+
+  <!-- BIO -->
+  <section class="section bio-section">
+    <article class="bio-card">
+      <!-- TOP: horizontal stats strip -->
+      <div class="bio-stats-strip">
+        <div class="bio-stats-strip-cell">
+          <div class="num">11<span class="unit">ans</span></div>
+          <div class="label">Expérience produit</div>
+        </div>
+        <div class="bio-stats-strip-vline"></div>
+        <div class="bio-stats-strip-cell">
+          <div class="num"><span class="plus">+</span>5<span class="unit">ans</span></div>
+          <div class="label">Data &amp; IA</div>
+        </div>
+        <div class="bio-stats-strip-vline"></div>
+        <div class="bio-stats-strip-cell">
+          <div class="num">4</div>
+          <div class="label">Grands groupes</div>
+        </div>
+      </div>
+
+      <!-- BOTTOM: bio body (text left, sectors right) -->
+      <div class="bio-body">
+        <div class="bio-body-left">
+          <div class="section-label">À propos</div>
+          <h2 class="bio-headline"><span class="bio-headline-red">Principal</span><br/>Product Owner IA<span class="dot">.</span></h2>
+          <p class="bio-paragraph">Je porte une grande attention à l'<strong>expérience utilisateur</strong> et à l'<strong>analyse des données</strong> afin de maximiser le <strong>ROI</strong> des produits sous ma responsabilité.</p>
+          <p class="bio-paragraph">Depuis 5 ans, je conçois et déploie des solutions à forte composante <span class="hl-mint">Data &amp; IA</span> — recommandations, automatisation NLP, GenAI, mesure d'impact business.</p>
+        </div>
+        <div class="bio-body-right">
+          <div class="bio-sectors-label">Secteurs explorés</div>
+          <div class="bio-sectors-stack">
+            <span class="bio-sector-chip"><span class="bio-sector-icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></span> Énergie</span>
+            <span class="bio-sector-chip"><span class="bio-sector-icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span> Assurance</span>
+            <span class="bio-sector-chip"><span class="bio-sector-icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></span> Banque</span>
+            <span class="bio-sector-chip"><span class="bio-sector-icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg></span> Retail</span>
+          </div>
+
+          <div class="bio-sectors-label bio-langues-label">Langues</div>
+          <div class="bio-sectors-stack">
+            <span class="bio-sector-chip"><span class="bio-sector-icon">🇬🇧</span> Anglais</span>
+          </div>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <!-- JOURNEY INTRO -->
+  <section class="section journey-intro">
+    <div class="section-label">Mon parcours</div>
+    <h2 class="section-title">4 expériences clés qui m'ont façonné</h2>
+  </section>
+
+  <!-- EXPERIENCE CARDS -->
+  <section style="padding-bottom: 40px;">
+    <article class="experience-card theme-total-red" data-exp-id="devoteam">
+      <div class="exp-year-block">
+        <div class="exp-year">2024</div>
+        <div class="exp-period">2024 — aujourd'hui</div>
+      </div>
+      <div>
+        <div class="exp-company">TotalEnergies · Devoteam</div>
+        <div class="exp-role">Principal Product Owner <span data-text-m="Consultant" data-text-f="Consultante">Consultant</span> · Plateforme GenAI</div>
+        <div class="exp-metric">20+ équipes outillées avec assistants GenAI</div>
+        <p class="exp-description">Pilotage de la plateforme GenAI interne d'un grand groupe énergétique en mission Devoteam : assistants spécialisés (Juridique, Achats, R&amp;D), framework d'évaluation qualité, gouvernance AI Act, accompagnement de 20+ équipes métier.</p>
+        <div class="exp-stack">
+          <span class="chip">GenAI</span>
+          <span class="chip">RAG</span>
+          <span class="chip">LLMOps</span>
+          <span class="chip">Azure OpenAI</span>
+          <span class="chip">AI Act</span>
+          <span class="chip">Guardrails</span>
+        </div>
+        <button class="exp-cta" type="button" data-open-exp="devoteam">
+          Voir le détail
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+
+    <article class="experience-card theme-axa-blue" data-exp-id="axa">
+      <div class="exp-year-block">
+        <div class="exp-year">2019</div>
+        <div class="exp-period">2019 — 2023</div>
+      </div>
+      <div>
+        <div class="exp-company">AXA France</div>
+        <div class="exp-role">Senior Product Manager · IA &amp; Sinistres</div>
+        <div class="exp-metric">−40 % de temps de traitement sinistres auto</div>
+        <p class="exp-description">Pilotage produit d'une plateforme d'aide à la décision pour les gestionnaires de sinistres auto et habitation. OCR + NLP sur constats amiables, computer vision pour les photos de dégâts, priorisation IA des dossiers complexes. Déploiement multi-pays (FR, BE, ES).</p>
+        <div class="exp-stack">
+          <span class="chip">MLOps</span>
+          <span class="chip">NLP</span>
+          <span class="chip">Computer Vision</span>
+          <span class="chip">OCR</span>
+          <span class="chip">InsurTech</span>
+        </div>
+        <button class="exp-cta" type="button" data-open-exp="axa">
+          Voir le détail
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+
+    <article class="experience-card theme-orange-pop" data-exp-id="orangebank">
+      <div class="exp-year-block">
+        <div class="exp-year">2016</div>
+        <div class="exp-period">2016 — 2019</div>
+      </div>
+      <div>
+        <div class="exp-company">Orange Bank</div>
+        <div class="exp-role">Product Manager · Banque mobile — parcours d'entrée</div>
+        <div class="exp-metric">+200 k clients en 18 mois post-lancement</div>
+        <p class="exp-description">Lancement et scale-up de la banque 100 % mobile d'Orange. Refonte de l'ouverture de compte digitale (KYC vidéo, signature électronique), intégration agrégateurs DSP2, partenariats Apple/Google Pay. Pilotage par A/B testing intensif sous forte pression time-to-market.</p>
+        <div class="exp-stack">
+          <span class="chip">FinTech</span>
+          <span class="chip">KYC</span>
+          <span class="chip">Onboarding</span>
+          <span class="chip">A/B Testing</span>
+          <span class="chip">Mobile</span>
+        </div>
+        <button class="exp-cta" type="button" data-open-exp="orangebank">
+          Voir le détail
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+
+    <article class="experience-card theme-decathlon-violet" data-exp-id="decathlon">
+      <div class="exp-year-block">
+        <div class="exp-year">2014</div>
+        <div class="exp-period">2014 — 2016</div>
+      </div>
+      <div>
+        <div class="exp-company">Decathlon</div>
+        <div class="exp-role">Product Owner Junior · App fidélité &amp; e-commerce sport</div>
+        <div class="exp-metric">App #1 sport en France · 8 M téléchargements</div>
+        <p class="exp-description">Premier rôle produit dans la Direction Digitale du leader européen du sport. Refonte du parcours d'inscription, recommandations personnalisées par sport pratiqué, mise en place de l'analytics produit. C'est là que j'ai appris la rigueur data-driven et l'écoute terrain.</p>
+        <div class="exp-stack">
+          <span class="chip">Product Discovery</span>
+          <span class="chip">Mobile</span>
+          <span class="chip">Retail</span>
+          <span class="chip">A/B Testing</span>
+          <span class="chip">Analytics</span>
+        </div>
+        <button class="exp-cta" type="button" data-open-exp="decathlon">
+          Voir le détail
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="5" y1="12" x2="19" y2="12"/>
+            <polyline points="12 5 19 12 12 19"/>
+          </svg>
+        </button>
+      </div>
+    </article>
+  </section>
+
+  <!-- SKILLS -->
+  <section class="section">
+    <div style="text-align:center; margin-bottom:48px;">
+      <div class="section-label">Compétences clés</div>
+      <h2 class="section-title">Expertise digitale et design de solutions IA</h2>
+    </div>
+
+    <div class="skills-grid">
+      <div class="skill-category theme-red">
+        <div class="skill-cat-title"><span class="icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></span> Product Management</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Product Strategy</span>
+          <span class="skill-chip">Product Discovery</span>
+          <span class="skill-chip">Product Delivery</span>
+          <span class="skill-chip">Product Marketing &amp; GTM</span>
+          <span class="skill-chip">OKRs</span>
+          <span class="skill-chip">Roadmapping</span>
+          <span class="skill-chip">Backlog Grooming</span>
+          <span class="skill-chip">A/B Testing</span>
+          <span class="skill-chip">User Research</span>
+          <span class="skill-chip">Personas</span>
+        </div>
+      </div>
+
+      <div class="skill-category theme-mint">
+        <div class="skill-cat-title"><span class="icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></span> Data &amp; IA</div>
+        <div class="skill-chips">
+          <span class="skill-chip">LLMOps</span>
+          <span class="skill-chip">GenAI</span>
+          <span class="skill-chip">RAG</span>
+          <span class="skill-chip">Prompt Engineering</span>
+          <span class="skill-chip">Function Calling</span>
+          <span class="skill-chip">Guardrails</span>
+          <span class="skill-chip">MLOps</span>
+          <span class="skill-chip">Fine-tuning</span>
+          <span class="skill-chip">Bias Analysis</span>
+          <span class="skill-chip">Explainable AI</span>
+          <span class="skill-chip">DataOps</span>
+          <span class="skill-chip">ETL</span>
+          <span class="skill-chip">Data Catalogs</span>
+        </div>
+      </div>
+
+      <div class="skill-category theme-cream">
+        <div class="skill-cat-title"><span class="icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg></span> Cloud &amp; Plateformes</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Azure AI Foundry</span>
+          <span class="skill-chip">Azure OpenAI</span>
+          <span class="skill-chip">Azure ML</span>
+          <span class="skill-chip">AWS</span>
+          <span class="skill-chip">Dataiku</span>
+          <span class="skill-chip">Apache Airflow</span>
+          <span class="skill-chip">Power BI</span>
+          <span class="skill-chip">Amplitude</span>
+          <span class="skill-chip">Google Analytics</span>
+        </div>
+      </div>
+
+      <div class="skill-category theme-lavender">
+        <div class="skill-cat-title"><span class="icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></span> Outils Produit &amp; Design</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Jira</span>
+          <span class="skill-chip">Aha!</span>
+          <span class="skill-chip">Confluence</span>
+          <span class="skill-chip">Notion</span>
+          <span class="skill-chip">Figma</span>
+          <span class="skill-chip">Miro</span>
+          <span class="skill-chip">Mural</span>
+          <span class="skill-chip">GitHub</span>
+        </div>
+      </div>
+
+      <div class="skill-category theme-red">
+        <div class="skill-cat-title"><span class="icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg></span> Méthodologies</div>
+        <div class="skill-chips">
+          <span class="skill-chip">Agile / Scrum</span>
+          <span class="skill-chip">Kanban</span>
+          <span class="skill-chip">SAFe</span>
+          <span class="skill-chip">Lean Product</span>
+          <span class="skill-chip">Continuous Discovery</span>
+          <span class="skill-chip">Jobs-To-Be-Done</span>
+        </div>
+      </div>
+
+      <div class="skill-category theme-mint">
+        <div class="skill-cat-title"><span class="icon"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg></span> Normes &amp; Conformité</div>
+        <div class="skill-chips">
+          <span class="skill-chip">AI Act</span>
+          <span class="skill-chip">ISO/IEC 27001</span>
+          <span class="skill-chip">RGPD</span>
+          <span class="skill-chip">Sustainable IT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EDUCATION & CERTIFICATIONS -->
+  <section class="section">
+    <div style="text-align:center; margin-bottom:48px;">
+      <div class="section-label">Formations &amp; Certifications</div>
+      <h2 class="section-title">Des fondations solides en Agilité</h2>
+    </div>
+
+    <div class="ed-cert-grid">
+      <div class="ed-cert-block">
+        <h3><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg> Formations</h3>
+        <div class="ed-cert-list">
+          <div class="ed-cert-item">
+            <div class="ico"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></div>
+            <div>
+              <div class="label">Master 2 — Grenoble École de Management (GEM)</div>
+              <div class="meta">Programme MIB · Innovation &amp; Digital Strategy</div>
+            </div>
+          </div>
+          <div class="ed-cert-item">
+            <div class="ico"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><line x1="3" x2="21" y1="22" y2="22"/><line x1="6" x2="6" y1="18" y2="11"/><line x1="10" x2="10" y1="18" y2="11"/><line x1="14" x2="14" y1="18" y2="11"/><line x1="18" x2="18" y1="18" y2="11"/><polygon points="12 2 20 7 4 7"/></svg></div>
+            <div>
+              <div class="label">Licence — IAE Lyon (Université Lyon 3)</div>
+              <div class="meta">Marketing &amp; Digital</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ed-cert-block">
+        <h3><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526"/><circle cx="12" cy="8" r="6"/></svg> Certifications</h3>
+        <div class="ed-cert-list">
+          <div class="ed-cert-item">
+            <div class="ico"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/></svg></div>
+            <div>
+              <div class="label">Professional Scrum Product Owner II (PSPO II)</div>
+              <div class="meta">Scrum.org · Product ownership avancé</div>
+            </div>
+          </div>
+          <div class="ed-cert-item">
+            <div class="ico"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg></div>
+            <div>
+              <div class="label">SAFe Product Owner / Product Manager (POPM 6.0)</div>
+              <div class="meta">Scaled Agile · Pilotage agile à l'échelle</div>
+            </div>
+          </div>
+          <div class="ed-cert-item">
+            <div class="ico"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></div>
+            <div>
+              <div class="label">Devoteam Generative AI Certified (Level 2)</div>
+              <div class="meta">Devoteam · Utilisation avancée de l'IA Générative</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="name"><span data-text-m="Thomas" data-text-f="Sarah">Thomas</span> Pastèque 🍉 · Principal Product Owner IA &amp; Data</div>
+    <div>Dossier de compétence Devoteam · © 2026</div>
+  </footer>
+
+</main>
+
+<!-- ================================================================
+     EXPERIENCE DETAIL MODAL (themed per experience)
+     ================================================================ -->
+<div class="exp-modal-overlay" id="exp-modal" hidden role="dialog" aria-modal="true" aria-labelledby="exp-modal-company">
+  <div class="exp-modal-card">
+    <div class="exp-modal-header">
+      <button class="exp-modal-close" id="exp-modal-close" type="button" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <line x1="6" y1="6" x2="18" y2="18"/>
+          <line x1="6" y1="18" x2="18" y2="6"/>
+        </svg>
+      </button>
+      <div class="exp-modal-year-block">
+        <div class="exp-modal-year" id="exp-modal-year">2024</div>
+        <div class="exp-modal-period" id="exp-modal-period">2024 — aujourd'hui</div>
+      </div>
+      <div class="exp-modal-company" id="exp-modal-company">TotalEnergies · Devoteam</div>
+      <div class="exp-modal-role" id="exp-modal-role">Principal Product Owner <span data-text-m="Consultant" data-text-f="Consultante">Consultant</span></div>
+    </div>
+    <div class="exp-modal-body">
+      <div class="exp-section">
+        <div class="exp-section-title">Contexte</div>
+        <p id="exp-modal-context"></p>
+      </div>
+      <div class="exp-section">
+        <div class="exp-section-title">Réalisations &amp; Responsabilités</div>
+        <ul id="exp-modal-achievements"></ul>
+      </div>
+      <div class="exp-section">
+        <div class="exp-section-title">Chiffres clés</div>
+        <div class="exp-metrics" id="exp-modal-metrics"></div>
+      </div>
+      <div class="exp-section">
+        <div class="exp-section-title">Stack &amp; compétences</div>
+        <div class="exp-modal-stack" id="exp-modal-stack"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================================================================
+     CONFIRM MODAL (custom — replaces native confirm())
+     ================================================================ -->
+<div class="modal-overlay" id="confirm-modal" hidden role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-icon" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="3 6 5 6 21 6"/>
+          <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>
+          <path d="M10 11v6"/>
+          <path d="M14 11v6"/>
+        </svg>
+      </div>
+      <div class="modal-title" id="confirm-title">Supprimer l'historique ?</div>
+    </div>
+    <div class="modal-body" id="confirm-body">La conversation avec l'assistant sera effacée définitivement de ce navigateur.</div>
+    <div class="modal-buttons">
+      <button class="modal-cancel" id="confirm-cancel" type="button">Annuler</button>
+      <button class="modal-confirm" id="confirm-ok" type="button">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+  // ============ CHATBOT — conversation, history, send ============
+  const HISTORY_KEY = 'dossier-template-conversation-v1';
+  const MAX_HISTORY_TURNS = 10;
+  const chatHistoryEl = document.getElementById('chat-history');
+  const chatInput = document.getElementById('chat-input');
+  const chatSend = document.getElementById('chat-send');
+  const clearChatBtn = document.getElementById('clear-chat-btn');
+  const sendIconHTML = chatSend.innerHTML;
+  const chatbotPanelEl = document.querySelector('.chatbot-panel');
+
+  function loadConversation() {
+    try {
+      const raw = localStorage.getItem(HISTORY_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  }
+  function saveConversation(list) {
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(list)); } catch {}
+  }
+  let conversation = loadConversation();
+
+  function updateChatLayout() {
+    const hasUserMessage = conversation.some((m) => m.role === 'user');
+    chatbotPanelEl.classList.toggle('chat-active', hasUserMessage);
+  }
+
+  function escapeHTML(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function lightMarkdown(s) {
+    let out = escapeHTML(s);
+    out = out.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    out = out.replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>');
+    out = out.replace(/`([^`]+)`/g, '<code>$1</code>');
+    return out;
+  }
+
+  function renderBubble(role, text, opts = {}) {
+    const div = document.createElement('div');
+    div.className = 'chat-bubble ' + role + (opts.error ? ' error' : '');
+    div.innerHTML = lightMarkdown(text);
+    chatHistoryEl.appendChild(div);
+    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+    return div;
+  }
+
+  function rerenderHistory() {
+    chatHistoryEl.innerHTML = '';
+    for (const m of conversation) renderBubble(m.role, m.text);
+  }
+
+  function appendUser(text) {
+    conversation.push({ role: 'user', text });
+    saveConversation(conversation);
+    updateChatLayout();
+    return renderBubble('user', text);
+  }
+  function appendAi(text, opts) {
+    conversation.push({ role: 'ai', text });
+    saveConversation(conversation);
+    updateChatLayout();
+    return renderBubble('ai', text, opts);
+  }
+
+  function showTyping() {
+    const div = document.createElement('div');
+    div.className = 'chat-bubble ai typing';
+    div.innerHTML = '<span></span><span></span><span></span>';
+    chatHistoryEl.appendChild(div);
+    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+    return div;
+  }
+
+  function setSending(isSending) {
+    chatInput.disabled = isSending;
+    chatSend.disabled = isSending;
+    chatSend.innerHTML = isSending ? '<div class="send-spinner"></div>' : sendIconHTML;
+  }
+
+  async function sendQuestion(question) {
+    const q = (question || '').trim();
+    if (!q) return;
+    if (q.length > 1000) {
+      renderBubble('ai', "Ta question est un peu longue — peux-tu la reformuler en moins de 1000 caractères ?", { error: true });
+      return;
+    }
+    appendUser(q);
+    chatInput.value = '';
+    setSending(true);
+    const typingBubble = showTyping();
+    const historyForRequest = conversation.slice(0, -1).slice(-MAX_HISTORY_TURNS).map(m => ({ role: m.role, text: m.text }));
+    try {
+      const resp = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q, history: historyForRequest, gender: window.__currentGender || 'homme' }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      typingBubble.remove();
+      if (!resp.ok) {
+        renderBubble('ai', data?.error || "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?", { error: true });
+      } else {
+        appendAi(data.message || '(réponse vide)');
+      }
+    } catch (err) {
+      typingBubble.remove();
+      renderBubble('ai', "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?", { error: true });
+      console.error('[chat] network error', err);
+    } finally {
+      setSending(false);
+      chatInput.focus();
+    }
+  }
+
+  chatSend.addEventListener('click', () => sendQuestion(chatInput.value));
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendQuestion(chatInput.value);
+    }
+  });
+
+  // ============ CUSTOM CONFIRM MODAL ============
+  const confirmModalEl = document.getElementById('confirm-modal');
+  const confirmTitleEl = document.getElementById('confirm-title');
+  const confirmBodyEl = document.getElementById('confirm-body');
+  const confirmCancelBtn = document.getElementById('confirm-cancel');
+  const confirmOkBtn = document.getElementById('confirm-ok');
+  let confirmResolver = null;
+
+  function openConfirm({ title, body, confirmLabel = 'Supprimer', cancelLabel = 'Annuler' } = {}) {
+    if (title) confirmTitleEl.textContent = title;
+    if (body) confirmBodyEl.textContent = body;
+    confirmOkBtn.textContent = confirmLabel;
+    confirmCancelBtn.textContent = cancelLabel;
+    confirmModalEl.hidden = false;
+    requestAnimationFrame(() => confirmModalEl.classList.add('visible'));
+    confirmCancelBtn.focus();
+    return new Promise((resolve) => { confirmResolver = resolve; });
+  }
+  function closeConfirm(result) {
+    confirmModalEl.classList.remove('visible');
+    setTimeout(() => { confirmModalEl.hidden = true; }, 180);
+    if (confirmResolver) { confirmResolver(result); confirmResolver = null; }
+  }
+  confirmCancelBtn.addEventListener('click', () => closeConfirm(false));
+  confirmOkBtn.addEventListener('click', () => closeConfirm(true));
+  confirmModalEl.addEventListener('click', (e) => { if (e.target === confirmModalEl) closeConfirm(false); });
+  document.addEventListener('keydown', (e) => {
+    if (confirmModalEl.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeConfirm(false); }
+    else if (e.key === 'Enter') { e.preventDefault(); closeConfirm(true); }
+  });
+
+  clearChatBtn.addEventListener('click', async () => {
+    if (!conversation.length) return;
+    const ok = await openConfirm({
+      title: "Supprimer l'historique ?",
+      body: "La conversation avec l'assistant sera effacée définitivement de ce navigateur.",
+      confirmLabel: 'Supprimer',
+      cancelLabel: 'Annuler',
+    });
+    if (!ok) return;
+    conversation = [];
+    saveConversation(conversation);
+    rerenderHistory();
+    updateChatLayout();
+  });
+
+  document.querySelectorAll('.prompt-button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const prompt = btn.dataset.prompt;
+      if (prompt) sendQuestion(prompt);
+    });
+  });
+
+  rerenderHistory();
+  updateChatLayout();
+
+  // ============ AVATAR GENDER TOGGLE ============
+  const GENDER_KEY = 'dossier-template-avatar-gender-v1';
+  const avatarImgEl = document.getElementById('avatar-img');
+  const genderToggleEl = document.getElementById('gender-toggle');
+  const genderIconEl = document.getElementById('gender-icon');
+  const genderTooltipEl = document.getElementById('gt-tooltip');
+
+  const MALE_ICON = '<circle cx="10" cy="14" r="5"/><line x1="13.5" y1="10.5" x2="20" y2="4"/><polyline points="15 4 20 4 20 9"/>';
+  const FEMALE_ICON = '<circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="22"/><line x1="9" y1="19" x2="15" y2="19"/>';
+
+  // Gender-aware text mapping. {name} = first name (Thomas/Sarah).
+  const GENDER_TITLE = {
+    homme: 'Thomas Pastèque — Principal Product Owner IA & Data · Dossier de compétence',
+    femme: 'Sarah Pastèque — Principal Product Owner IA & Data · Dossier de compétence'
+  };
+  const NAMES = { homme: 'Thomas', femme: 'Sarah' };
+  // Window-scoped so the inline first-paint script can use the same source of truth.
+  window.__currentGender = window.__avatarGender || 'homme';
+
+  function applyGenderText(gender) {
+    // Swap textContent of all [data-text-m]/[data-text-f] tagged spans.
+    const attr = gender === 'femme' ? 'textF' : 'textM';
+    document.querySelectorAll('[data-text-m]').forEach(el => {
+      const v = el.dataset[attr];
+      if (v != null) el.textContent = v;
+    });
+    // Substitute {name} in prompt button data-prompt from data-prompt-template.
+    document.querySelectorAll('.prompt-button[data-prompt-template]').forEach(btn => {
+      btn.setAttribute('data-prompt', btn.dataset.promptTemplate.replaceAll('{name}', NAMES[gender]));
+    });
+    // Update document.title.
+    document.title = GENDER_TITLE[gender];
+    window.__currentGender = gender;
+  }
+
+  function applyGender(gender) {
+    const isFemme = gender === 'femme';
+    avatarImgEl.src = isFemme ? './assets/avatar-portrait-femme_white-eyes_transparent.png' : './assets/avatar-portrait-homme_white-eyes_transparent.png';
+    avatarImgEl.alt = isFemme ? 'Portrait illustré (variante femme)' : 'Portrait illustré (variante homme)';
+    genderToggleEl.classList.toggle('is-femme', isFemme);
+    genderIconEl.innerHTML = isFemme ? FEMALE_ICON : MALE_ICON;
+    genderTooltipEl.textContent = isFemme ? 'Passer en homme' : 'Passer en femme';
+    genderToggleEl.setAttribute('aria-label', isFemme ? 'Variante femme active. Cliquer pour passer en homme.' : 'Variante homme active. Cliquer pour passer en femme.');
+    applyGenderText(gender);
+    try { localStorage.setItem(GENDER_KEY, gender); } catch {}
+  }
+
+  function loadGender() {
+    try { return localStorage.getItem(GENDER_KEY) === 'femme' ? 'femme' : 'homme'; } catch { return 'homme'; }
+  }
+
+  applyGender(loadGender());
+  genderToggleEl.addEventListener('click', () => {
+    applyGender(genderToggleEl.classList.contains('is-femme') ? 'homme' : 'femme');
+  });
+
+  // ============ EYE TRACKING ============
+  // Pupilles sur les yeux blancs des avatars qui s'orientent vers le curseur.
+  // Coords yeux en fraction du cadre avatar (0..1) — par genre.
+  const EYE_COORDS = {
+    homme: { left: { cx: 0.424, cy: 0.436, r: 0.06 }, right: { cx: 0.622, cy: 0.438, r: 0.06 } },
+    femme: { left: { cx: 0.397, cy: 0.445, r: 0.06 }, right: { cx: 0.591, cy: 0.445, r: 0.06 } }
+  };
+  const eyeSocketLeft  = document.querySelector('.eye-socket.eye-left');
+  const eyeSocketRight = document.querySelector('.eye-socket.eye-right');
+  const pupils         = document.querySelectorAll('.pupil');
+
+  function applyEyeCoords(gender) {
+    const c = EYE_COORDS[gender] || EYE_COORDS.homme;
+    [[eyeSocketLeft, c.left], [eyeSocketRight, c.right]].forEach(([el, e]) => {
+      if (!el) return;
+      el.style.left   = (e.cx - e.r) * 100 + '%';
+      el.style.top    = (e.cy - e.r) * 100 + '%';
+      el.style.width  = e.r * 200 + '%';
+      el.style.height = e.r * 200 + '%';
+    });
+  }
+  // Wrap existing applyGender so eye coords swap on toggle
+  const _applyGenderOriginal = applyGender;
+  applyGender = function (g) { _applyGenderOriginal(g); applyEyeCoords(g); };
+  applyEyeCoords(loadGender());
+
+  // mousemove → rAF throttled pupil update
+  const MAX_SHIFT_RATIO = 0.18; // pupille shift jusqu'à 18% du rayon socket — équilibré, visible sans déborder
+  let _eyeRafId = null, _eyeLastEvt = null;
+  function _onEyeMove(e) {
+    _eyeLastEvt = e;
+    if (_eyeRafId) return;
+    _eyeRafId = requestAnimationFrame(() => {
+      _eyeRafId = null;
+      if (!_eyeLastEvt) return;
+      pupils.forEach(p => {
+        const r = p.parentElement.getBoundingClientRect();
+        if (!r.width) return;
+        const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+        const dx = _eyeLastEvt.clientX - cx, dy = _eyeLastEvt.clientY - cy;
+        const angle = Math.atan2(dy, dx);
+        const maxShift = r.width * MAX_SHIFT_RATIO / 2;
+        const dist = Math.min(Math.hypot(dx, dy) / 80, 1) * maxShift;
+        p.style.setProperty('--px', `${Math.cos(angle) * dist}px`);
+        p.style.setProperty('--py', `${Math.sin(angle) * dist}px`);
+      });
+    });
+  }
+  function _resetPupils() {
+    pupils.forEach(p => {
+      p.style.setProperty('--px', '0px');
+      p.style.setProperty('--py', '0px');
+    });
+  }
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches && !matchMedia('(hover: none)').matches) {
+    document.addEventListener('mousemove', _onEyeMove, { passive: true });
+    document.addEventListener('mouseleave', _resetPupils);
+  }
+
+  // Calibration mode (?calibrate=1) — click each eye to log coords for EYE_COORDS
+  if (new URLSearchParams(location.search).has('calibrate')) {
+    // Listener on the .hero-avatar-img container (img has overlays on top)
+    const heroAvatarImg = document.querySelector('.hero-avatar-img');
+    heroAvatarImg.style.cursor = 'crosshair';
+    // Visible overlay so feedback is impossible to miss
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:12px;left:12px;background:#1F2937;color:#22D69B;padding:14px 16px;font:13px/1.5 ui-monospace,Menlo,monospace;z-index:99999;border-radius:8px;max-width:380px;box-shadow:0 8px 24px rgba(0,0,0,.25);white-space:pre-wrap;';
+    overlay.textContent = '[CALIBRATE] Bascule au genre voulu, puis clique\nau centre de l\'œil GAUCHE, puis l\'œil DROIT.\nCoords copy-pasta s\'afficheront ici.';
+    document.body.appendChild(overlay);
+    let _calClicks = [];
+    heroAvatarImg.addEventListener('click', (e) => {
+      const r = heroAvatarImg.getBoundingClientRect();
+      const cx = +((e.clientX - r.left) / r.width).toFixed(3);
+      const cy = +((e.clientY - r.top) / r.height).toFixed(3);
+      _calClicks.push({ cx, cy });
+      const idx = _calClicks.length;
+      console.log(`[calibrate] click ${idx}/2: cx=${cx}, cy=${cy}`);
+      if (idx === 2) {
+        const out = `// ${(loadGender() || 'homme')}\nleft:  { cx: ${_calClicks[0].cx}, cy: ${_calClicks[0].cy}, r: 0.05 },\nright: { cx: ${_calClicks[1].cx}, cy: ${_calClicks[1].cy}, r: 0.05 }`;
+        overlay.textContent = `[CALIBRATE] Captured for ${loadGender()}:\n\n${out}\n\n→ Bascule de genre + recommence pour l'autre.`;
+        console.log(out);
+        _calClicks = [];
+      } else {
+        overlay.textContent = `[CALIBRATE] Click ${idx}/2: cx=${cx}, cy=${cy}\n(Clique maintenant le centre de l'œil DROIT)`;
+      }
+    });
+    // Show eye-sockets visibly during calibration
+    const dbgStyle = document.createElement('style');
+    dbgStyle.textContent = '.eye-socket { outline: 2px dashed rgba(248,72,94,.8); outline-offset: -2px; }';
+    document.head.appendChild(dbgStyle);
+    console.log('[calibrate] Mode actif — clique au centre de chaque œil (gauche puis droit) pour capturer les coords.');
+  }
+
+  // ============ EXPERIENCE DETAIL MODAL ============
+  const EXPERIENCES = {
+    devoteam: {
+      theme: 'total-red',
+      year: '2024',
+      period: 'Janvier 2024 — aujourd\'hui',
+      company: 'TotalEnergies · Devoteam',
+      role: 'Principal Product Owner Consultant · Plateforme GenAI interne',
+      context: "Consultant Devoteam intégré chez TotalEnergies pour piloter la mise à l'échelle d'une plateforme d'assistants GenAI à destination des fonctions support du groupe (Juridique, Achats, R&D, Finance). Équipe pluridisciplinaire de 6 personnes.",
+      achievements: [
+        "Co-construction de la roadmap GenAI 2024-2026 alignée avec les objectifs de la Direction Digitale Groupe.",
+        "Conception du framework d'évaluation qualité des assistants : datasets de référence par métier, métriques de hallucination/justesse, A/B testing humain.",
+        "Mise en place de la gouvernance AI Act (catégorisation des cas d'usage, registre des modèles, audit trail).",
+        "Pilotage du build de 3 assistants spécialisés : juridique (analyse de contrats), achats (rédaction d'appels d'offres), R&D (synthèse de littérature scientifique).",
+        "Accompagnement de 20+ équipes métier dans l'identification et le cadrage de leurs propres cas d'usage GenAI."
+      ],
+      metrics: [
+        { value: '20+', label: 'équipes outillées avec assistants GenAI' },
+        { value: '−35 %', label: 'de temps sur l\'analyse initiale de contrats' },
+        { value: '> 92 %', label: 'score de fidélité (groundedness) en production' },
+        { value: '−28 %', label: 'coûts d\'inférence via routing multi-modèle' }
+      ],
+      stack: ['GenAI', 'RAG', 'LLMOps', 'Azure OpenAI', 'AI Act', 'Guardrails', 'Prompt Engineering', 'Gouvernance IA']
+    },
+    axa: {
+      theme: 'axa-blue',
+      year: '2019',
+      period: 'Septembre 2019 — Décembre 2023 (4 ans 4 mois)',
+      company: 'AXA France',
+      role: 'Senior Product Manager · IA & Automatisation des Sinistres',
+      context: "Pilotage produit d'une plateforme d'aide à la décision pour les gestionnaires de sinistres auto et habitation. Squad de 5 personnes (PM, 2 ML Engineers, 1 Data Scientist, 1 UX). Branche IARD (Incendie, Accidents, Risques Divers).",
+      achievements: [
+        "Refonte du parcours de déclaration de sinistre auto en self-service mobile (taux de complétion ×2).",
+        "Pilotage de la brique OCR + NLP d'extraction des constats amiables papier scannés (>500 k constats/an).",
+        "Modèle de priorisation IA des dossiers complexes : tri en temps réel selon urgence/gravité/fraude.",
+        "Computer Vision pour pré-analyse des photos de dégâts auto (classification gravité + estimation préliminaire).",
+        "Déploiement multi-pays Europe : France, Belgique, Espagne (adaptation linguistique et réglementaire).",
+        "Conformité RGPD et AI Act anticipée — registre des traitements, AIPD, explicabilité des décisions."
+      ],
+      metrics: [
+        { value: '−40 %', label: 'temps moyen de traitement sinistres auto' },
+        { value: '500 k', label: 'constats amiables traités automatiquement / an' },
+        { value: 'NPS +18', label: 'satisfaction sinistré sur 4 ans' },
+        { value: '+25 %', label: 'cas suspects identifiés à l\'ouverture' },
+        { value: '12 M€/an', label: 'économies opérationnelles au pic du déploiement' }
+      ],
+      stack: ['MLOps', 'NLP', 'OCR', 'Computer Vision', 'InsurTech', 'Azure ML', 'RGPD', 'AI Act']
+    },
+    orangebank: {
+      theme: 'orange-pop',
+      year: '2016',
+      period: 'Octobre 2016 — Août 2019 (2 ans 11 mois)',
+      company: 'Orange Bank',
+      role: 'Product Manager · Banque mobile — parcours d\'entrée',
+      context: "Lancement et scale-up de la banque 100 % mobile d'Orange. Équipe Onboarding (5 personnes) au sein d'un département Produit de 30 personnes. Forte pression time-to-market — guerre commerciale avec N26, Revolut, Boursorama.",
+      achievements: [
+        "Refonte complète du parcours d'ouverture de compte 100 % digital (KYC vidéo, signature électronique, activation Apple/Google Pay).",
+        "Pilotage de l'intégration des agrégateurs DSP2 (open banking) pour l'agrégation multi-banques.",
+        "Optimisation continue par A/B testing : 40+ expériences sur 18 mois (étapes du funnel, copywriting, UI mobile, notifications).",
+        "Cadrage et lancement du parcours d'activation carte virtuelle (carte disponible en 5 minutes après ouverture).",
+        "Collaboration étroite avec les équipes Conformité, Risque et LCB-FT (anti-blanchiment)."
+      ],
+      metrics: [
+        { value: '+200 k', label: 'clients en 18 mois post-lancement national' },
+        { value: '38 → 67 %', label: 'taux de complétion du parcours ouverture' },
+        { value: '5 min', label: 'time-to-card (vs 24 h avant la refonte)' },
+        { value: 'NPS +28', label: 'onboarding en 12 mois' },
+        { value: '40+', label: 'A/B tests sur 18 mois' }
+      ],
+      stack: ['FinTech', 'KYC', 'Onboarding', 'DSP2', 'A/B Testing', 'Mobile First', 'RGPD', 'LCB-FT']
+    },
+    decathlon: {
+      theme: 'decathlon-violet',
+      year: '2014',
+      period: 'Janvier 2014 — Septembre 2016 (2 ans 8 mois)',
+      company: 'Decathlon',
+      role: 'Product Owner Junior · App fidélité & e-commerce sport',
+      context: "Premier rôle produit dans la Direction Digitale du leader européen du sport. Squad mobile de 6 personnes (1 PO, 4 dev, 1 UX) au siège de Marcq-en-Barœul. Refonte complète de l'app fidélité côté client final.",
+      achievements: [
+        "Refonte du parcours d'inscription en magasin (passage de 6 à 2 étapes via dématérialisation de la carte fidélité).",
+        "Recommandations produits personnalisées par sport pratiqué (collaborative filtering simple — pas encore de deep learning à l'époque).",
+        "Animation de boucles de feedback avec les vendeurs en magasin — synthèse hebdo des frustrations utilisateurs.",
+        "Mise en place de l'analytics produit (events Amplitude, dashboards Power BI pour la Direction).",
+        "A/B testing systématique sur les écrans clés (home, fiche produit, panier)."
+      ],
+      metrics: [
+        { value: '8 M', label: 'téléchargements en 30 mois (App #1 sport en France)' },
+        { value: 'x4', label: 'DAU multiplié sur 24 mois post-refonte' },
+        { value: '+18 %', label: 'panier moyen avec recommandations activées' },
+        { value: '4,2 → 4,7', label: 'note App Store sur la période' }
+      ],
+      stack: ['Product Discovery', 'Mobile', 'Retail', 'A/B Testing', 'Amplitude', 'Power BI', 'Recommandations']
+    }
+  };
+
+  const expModalEl = document.getElementById('exp-modal');
+  const expModalClose = document.getElementById('exp-modal-close');
+  const expModalYear = document.getElementById('exp-modal-year');
+  const expModalPeriod = document.getElementById('exp-modal-period');
+  const expModalCompany = document.getElementById('exp-modal-company');
+  const expModalRole = document.getElementById('exp-modal-role');
+  const expModalContext = document.getElementById('exp-modal-context');
+  const expModalAchievements = document.getElementById('exp-modal-achievements');
+  const expModalMetrics = document.getElementById('exp-modal-metrics');
+  const expModalStack = document.getElementById('exp-modal-stack');
+  let expModalLastTrigger = null;
+
+  // Transform masculine → feminine accords for the current candidate gender.
+  // Hardcoded for the words that actually appear in EXPERIENCES data and refer to the candidate.
+  function applyAccord(text) {
+    if ((window.__currentGender || 'homme') !== 'femme') return text;
+    return String(text)
+      .replace(/\bConsultant\b/g, 'Consultante')
+      .replace(/\bintégré\b/g, 'intégrée')
+      .replace(/\bThomas\b/g, 'Sarah');
+  }
+
+  function openExpModal(expId) {
+    const data = EXPERIENCES[expId];
+    if (!data) return;
+    expModalEl.dataset.theme = data.theme;
+    expModalYear.textContent = data.year;
+    expModalPeriod.textContent = data.period;
+    expModalCompany.textContent = data.company;
+    expModalRole.textContent = applyAccord(data.role);
+    expModalContext.textContent = applyAccord(data.context);
+    expModalAchievements.innerHTML = data.achievements.map(a => `<li>${escapeHTML(applyAccord(a))}</li>`).join('');
+    expModalMetrics.innerHTML = data.metrics.map(m => `
+      <div class="exp-metric-card">
+        <div class="exp-metric-value">${escapeHTML(m.value)}</div>
+        <div class="exp-metric-label">${escapeHTML(m.label)}</div>
+      </div>`).join('');
+    expModalStack.innerHTML = data.stack.map(s => `<span class="chip">${escapeHTML(s)}</span>`).join('');
+
+    expModalEl.hidden = false;
+    document.body.style.overflow = 'hidden';
+    requestAnimationFrame(() => expModalEl.classList.add('visible'));
+    expModalClose.focus();
+  }
+  function closeExpModal() {
+    expModalEl.classList.remove('visible');
+    document.body.style.overflow = '';
+    setTimeout(() => { expModalEl.hidden = true; }, 220);
+    if (expModalLastTrigger) { expModalLastTrigger.focus(); expModalLastTrigger = null; }
+  }
+  document.querySelectorAll('[data-open-exp]').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      expModalLastTrigger = btn;
+      openExpModal(btn.dataset.openExp);
+    });
+  });
+  expModalClose.addEventListener('click', closeExpModal);
+  expModalEl.addEventListener('click', (e) => { if (e.target === expModalEl) closeExpModal(); });
+  document.addEventListener('keydown', (e) => {
+    if (expModalEl.hidden) return;
+    if (e.key === 'Escape') { e.preventDefault(); closeExpModal(); }
+  });
+
+  // ============ EXPERIENCE CARDS — fade-in on scroll ============
+  const cards = document.querySelectorAll('.experience-card');
+  const io = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        io.unobserve(entry.target);
+      }
+    }
+  }, { threshold: 0.2 });
+  cards.forEach(c => io.observe(c));
+})();
+</script>
+
+</body>
+</html>
