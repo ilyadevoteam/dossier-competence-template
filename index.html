@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Thomas Pastèque — Principal Product Owner IA &amp; Data · Dossier de compétence</title>
 <link href="./vendor/inter.css" rel="stylesheet">
+
+<!-- Preload all visual assets in parallel — instant gender toggle, no flicker -->
+<link rel="preload" as="image" href="./assets/avatar-portrait-homme_white-eyes_transparent.png">
+<link rel="preload" as="image" href="./assets/avatar-portrait-femme_white-eyes_transparent.png">
+<link rel="preload" as="image" href="./assets/avatar-portrait-pupille.png">
+<link rel="preload" as="image" href="./assets/super-cat-devoteam.png">
+<link rel="preload" as="image" href="./assets/devoteam_logo_avec_texte.svg" type="image/svg+xml">
+
 <script>
   // Pre-resolve avatar gender BEFORE the body renders, so the correct portrait
   // shows on first paint (no flash of homme then femme).
