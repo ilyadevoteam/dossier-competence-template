@@ -917,7 +917,7 @@
 
   <div class="input-wrapper">
     <div class="input-row">
-      <input type="text" id="chat-input" placeholder="Tapez votre question..." aria-label="Question pour le chatbot" maxlength="1000" />
+      <input type="text" id="chat-input" placeholder="Tapez votre question..." aria-label="Question pour le chatbot" maxlength="500" />
       <button class="send-button" id="chat-send" aria-label="Envoyer">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/>
@@ -1436,7 +1436,7 @@
 
   function rerenderHistory() {
     chatHistoryEl.innerHTML = '';
-    for (const m of conversation) renderBubble(m.role, m.text);
+    for (const m of conversation) renderBubble(m.role, m.text, { error: !!m.error });
   }
 
   function appendUser(text) {
@@ -1445,8 +1445,10 @@
     updateChatLayout();
     return renderBubble('user', text);
   }
-  function appendAi(text, opts) {
-    conversation.push({ role: 'ai', text });
+  function appendAi(text, opts = {}) {
+    const entry = { role: 'ai', text };
+    if (opts.error) entry.error = true;
+    conversation.push(entry);
     saveConversation(conversation);
     updateChatLayout();
     return renderBubble('ai', text, opts);
@@ -1470,10 +1472,6 @@
   async function sendQuestion(question) {
     const q = (question || '').trim();
     if (!q) return;
-    if (q.length > 1000) {
-      renderBubble('ai', "Ta question est un peu longue — peux-tu la reformuler en moins de 1000 caractères ?", { error: true });
-      return;
-    }
     appendUser(q);
     chatInput.value = '';
     setSending(true);
@@ -1488,13 +1486,13 @@
       const data = await resp.json().catch(() => ({}));
       typingBubble.remove();
       if (!resp.ok) {
-        renderBubble('ai', data?.error || "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?", { error: true });
+        appendAi(data?.error || "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?", { error: true });
       } else {
         appendAi(data.message || '(réponse vide)');
       }
     } catch (err) {
       typingBubble.remove();
-      renderBubble('ai', "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?", { error: true });
+      appendAi("Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?", { error: true });
       console.error('[chat] network error', err);
     } finally {
       setSending(false);

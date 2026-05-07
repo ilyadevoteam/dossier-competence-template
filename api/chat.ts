@@ -127,13 +127,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   const question = (body.question ?? "").trim();
   const history = Array.isArray(body.history) ? body.history.slice(-10) : [];
   if (!question) return sendJson(res, { error: "Question vide." }, 400);
-  if (question.length > 1000) {
-    return sendJson(
-      res,
-      { error: "Ta question est un peu longue — peux-tu la reformuler en moins de 1000 caractères ?" },
-      400,
-    );
-  }
 
   const contents: GeminiContent[] = [];
   for (const turn of history) {
@@ -207,10 +200,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
 
   if (!resp || !resp.ok) {
     console.error(`[chat] gemini err · ${Date.now() - t0}ms ·`, lastStatus, lastErrMsg);
+    // Detect daily-quota (RPD) vs minute-quota (RPM/TPM) for 429 errors.
+    // Gemini 429 responses include details[].violations[].quotaId where the id
+    // contains "PerDay" for daily limits and "PerMinute" for per-minute limits.
+    const violations: any[] = (data?.error?.details ?? []).flatMap((d: any) => d?.violations ?? []);
+    const isDailyQuota = violations.some((v: any) =>
+      /PerDay/i.test(v?.quotaId ?? "") || /PerDay/i.test(v?.quotaMetric ?? "")
+    );
     const userMsg = lastStatus === 503
       ? "Le modèle Gemini est temporairement saturé chez Google. Réessaie dans une trentaine de secondes."
       : lastStatus === 429
-        ? "Quota Gemini atteint pour le moment. Patiente une minute puis réessaie."
+        ? (isDailyQuota
+            ? "Quota journalier Gemini atteint pour aujourd'hui. Réessaie demain — la limite se réinitialise à minuit (heure Pacifique, ≈ 9h Paris)."
+            : "Quota Gemini atteint pour le moment. Patiente une minute puis réessaie.")
         : "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?";
     return sendJson(res, { error: userMsg }, lastStatus || 502);
   }
