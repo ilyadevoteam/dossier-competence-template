@@ -7,8 +7,13 @@ import { join } from "node:path";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? "";
 const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
+// Fallback model used only if the primary returns 503 (overloaded).
+// Comma-separated env var override allowed; default chains 3.1-lite → 2.5-flash.
+const GEMINI_FALLBACK_MODEL = process.env.GEMINI_FALLBACK_MODEL ?? "gemini-2.5-flash";
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
-const GEMINI_URL = `${GEMINI_BASE}/models/${GEMINI_MODEL}:generateContent`;
+function geminiUrl(model: string): string {
+  return `${GEMINI_BASE}/models/${model}:generateContent`;
+}
 const GEMINI_CACHE_URL = `${GEMINI_BASE}/cachedContents`;
 const ENABLE_CACHE = (process.env.GEMINI_CACHE ?? "true").toLowerCase() !== "false";
 const CACHE_TTL_SEC = 3600;
@@ -153,61 +158,78 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   let payload = buildPayload(activeCache);
   let usedCache = !!activeCache;
 
-  // Retry budget calibrated to stay under Vercel's 30s function timeout:
-  // 1 retry max, with per-fetch AbortController timeout of 12s.
-  // Worst case: 12s + 800ms + 12s = 24.8s, leaves headroom under 30s.
-  // No retry on 503 (Gemini overload — won't recover in <1s, fail fast).
-  const RETRY_DELAYS = [800];
-  const TRANSIENT = new Set([429, 500, 502, 504]); // 503 excluded — fail fast
-  const FETCH_TIMEOUT_MS = 12000;
+  // Resilience strategy under Vercel's 30s function timeout:
+  // - Try primary model with 14s timeout
+  // - On 503 (Gemini overloaded), fall back to GEMINI_FALLBACK_MODEL with 12s timeout
+  // - On 429/500/502/504, retry once on same model after 800ms
+  // Worst case: 14s + 800ms + 12s = 26.8s — under 30s with headroom.
+  const TRANSIENT = new Set([429, 500, 502, 504]); // 503 handled separately via fallback
+  const PRIMARY_TIMEOUT_MS = 14000;
+  const FALLBACK_TIMEOUT_MS = 12000;
+  const RETRY_DELAY_MS = 800;
 
-  let resp: Response | null = null;
-  let data: any = {};
-  let lastStatus = 0;
-  let lastErrMsg = "";
+  type AttemptResult = { resp: Response | null; data: any; status: number; errMsg: string };
 
-  for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+  async function attempt(model: string, timeoutMs: number, body: string): Promise<AttemptResult> {
     const ctrl = new AbortController();
-    const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    const t = setTimeout(() => ctrl.abort(), timeoutMs);
     try {
-      resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(GEMINI_API_KEY)}`, {
+      const r = await fetch(`${geminiUrl(model)}?key=${encodeURIComponent(GEMINI_API_KEY)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: payload,
+        body,
         signal: ctrl.signal,
       });
       clearTimeout(t);
-      data = await resp.json().catch(() => ({}));
-      lastStatus = resp.status;
-      lastErrMsg = data?.error?.message ?? "";
-
-      if (resp.ok) break;
-
-      const errMsgLow = (lastErrMsg || "").toLowerCase();
-      if (usedCache && (resp.status === 404 || errMsgLow.includes("cachedcontent"))) {
-        console.warn(`[cache] invalidated by server, retrying without cache`);
-        cacheName = null;
-        cacheExpiresAt = 0;
-        usedCache = false;
-        payload = buildPayload(null);
-        continue;
-      }
-
-      if (!TRANSIENT.has(resp.status)) break;
-      if (attempt >= RETRY_DELAYS.length) break;
-
-      console.warn(`[chat] retry ${attempt + 1}/${RETRY_DELAYS.length} · ${resp.status} ${lastErrMsg.slice(0, 80)}`);
-      await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
+      const d = await r.json().catch(() => ({}));
+      return { resp: r, data: d, status: r.status, errMsg: d?.error?.message ?? "" };
     } catch (netErr: any) {
       clearTimeout(t);
       const aborted = netErr?.name === "AbortError";
-      lastErrMsg = aborted ? "fetch timeout" : (netErr?.message ?? String(netErr));
-      lastStatus = aborted ? 504 : 0;
-      if (attempt >= RETRY_DELAYS.length) break;
-      console.warn(`[chat] retry ${attempt + 1}/${RETRY_DELAYS.length} · ${aborted ? "timeout" : "network err"} ${lastErrMsg.slice(0, 80)}`);
-      await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
+      return {
+        resp: null,
+        data: {},
+        status: aborted ? 504 : 0,
+        errMsg: aborted ? "fetch timeout" : (netErr?.message ?? String(netErr)),
+      };
     }
   }
+
+  // Pass 1: primary model
+  let attemptRes: AttemptResult = await attempt(GEMINI_MODEL, PRIMARY_TIMEOUT_MS, payload);
+
+  // Cache invalidation: retry once without cache on the same model
+  if (attemptRes.resp && !attemptRes.resp.ok) {
+    const errMsgLow = (attemptRes.errMsg || "").toLowerCase();
+    if (usedCache && (attemptRes.status === 404 || errMsgLow.includes("cachedcontent"))) {
+      console.warn(`[cache] invalidated by server, retrying without cache`);
+      cacheName = null;
+      cacheExpiresAt = 0;
+      usedCache = false;
+      payload = buildPayload(null);
+      attemptRes = await attempt(GEMINI_MODEL, PRIMARY_TIMEOUT_MS, payload);
+    }
+  }
+
+  // Transient retry (not 503) on same model
+  if ((!attemptRes.resp || !attemptRes.resp.ok) && attemptRes.status !== 0 && TRANSIENT.has(attemptRes.status)) {
+    console.warn(`[chat] transient ${attemptRes.status} on ${GEMINI_MODEL}, retrying after ${RETRY_DELAY_MS}ms`);
+    await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+    attemptRes = await attempt(GEMINI_MODEL, PRIMARY_TIMEOUT_MS, payload);
+  }
+
+  // Fallback to secondary model on 503 (overloaded) — different pool, often available
+  if (attemptRes.resp && attemptRes.resp.status === 503 && GEMINI_FALLBACK_MODEL && GEMINI_FALLBACK_MODEL !== GEMINI_MODEL) {
+    console.warn(`[chat] primary ${GEMINI_MODEL} returned 503, falling back to ${GEMINI_FALLBACK_MODEL}`);
+    payload = buildPayload(null);
+    usedCache = false;
+    attemptRes = await attempt(GEMINI_FALLBACK_MODEL, FALLBACK_TIMEOUT_MS, payload);
+  }
+
+  const resp = attemptRes.resp;
+  const data = attemptRes.data;
+  const lastStatus = attemptRes.status;
+  const lastErrMsg = attemptRes.errMsg;
 
   if (!resp || !resp.ok) {
     console.error(`[chat] gemini err · ${Date.now() - t0}ms ·`, lastStatus, lastErrMsg);
