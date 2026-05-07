@@ -153,8 +153,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   let payload = buildPayload(activeCache);
   let usedCache = !!activeCache;
 
-  const RETRY_DELAYS = [600, 1500, 3500];
-  const TRANSIENT = new Set([429, 500, 502, 503, 504]);
+  // Retry budget calibrated to stay under Vercel's 30s function timeout:
+  // 1 retry max, with per-fetch AbortController timeout of 12s.
+  // Worst case: 12s + 800ms + 12s = 24.8s, leaves headroom under 30s.
+  // No retry on 503 (Gemini overload — won't recover in <1s, fail fast).
+  const RETRY_DELAYS = [800];
+  const TRANSIENT = new Set([429, 500, 502, 504]); // 503 excluded — fail fast
+  const FETCH_TIMEOUT_MS = 12000;
 
   let resp: Response | null = null;
   let data: any = {};
@@ -162,12 +167,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   let lastErrMsg = "";
 
   for (let attempt = 0; attempt <= RETRY_DELAYS.length; attempt++) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
     try {
       resp = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(GEMINI_API_KEY)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: payload,
+        signal: ctrl.signal,
       });
+      clearTimeout(t);
       data = await resp.json().catch(() => ({}));
       lastStatus = resp.status;
       lastErrMsg = data?.error?.message ?? "";
@@ -190,10 +199,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
       console.warn(`[chat] retry ${attempt + 1}/${RETRY_DELAYS.length} · ${resp.status} ${lastErrMsg.slice(0, 80)}`);
       await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
     } catch (netErr: any) {
-      lastErrMsg = netErr?.message ?? String(netErr);
-      lastStatus = 0;
+      clearTimeout(t);
+      const aborted = netErr?.name === "AbortError";
+      lastErrMsg = aborted ? "fetch timeout" : (netErr?.message ?? String(netErr));
+      lastStatus = aborted ? 504 : 0;
       if (attempt >= RETRY_DELAYS.length) break;
-      console.warn(`[chat] retry ${attempt + 1}/${RETRY_DELAYS.length} · network err ${lastErrMsg.slice(0, 80)}`);
+      console.warn(`[chat] retry ${attempt + 1}/${RETRY_DELAYS.length} · ${aborted ? "timeout" : "network err"} ${lastErrMsg.slice(0, 80)}`);
       await new Promise((r) => setTimeout(r, RETRY_DELAYS[attempt]));
     }
   }
@@ -209,11 +220,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
     );
     const userMsg = lastStatus === 503
       ? "Le modèle Gemini est temporairement saturé chez Google. Réessaie dans une trentaine de secondes."
-      : lastStatus === 429
-        ? (isDailyQuota
-            ? "Quota journalier Gemini atteint pour aujourd'hui. Réessaie demain — la limite se réinitialise à minuit (heure Pacifique, ≈ 9h Paris)."
-            : "Quota Gemini atteint pour le moment. Patiente une minute puis réessaie.")
-        : "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?";
+      : lastStatus === 504
+        ? "Le modèle Gemini met trop de temps à répondre. Réessaie dans un instant."
+        : lastStatus === 429
+          ? (isDailyQuota
+              ? "Quota journalier Gemini atteint pour aujourd'hui. Réessaie demain — la limite se réinitialise à minuit (heure Pacifique, ≈ 9h Paris)."
+              : "Quota Gemini atteint pour le moment. Patiente une minute puis réessaie.")
+          : "Désolé, je n'ai pas pu répondre. Réessaie dans un instant ?";
     return sendJson(res, { error: userMsg }, lastStatus || 502);
   }
 
