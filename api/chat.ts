@@ -6,7 +6,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY ?? "";
-const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+const GEMINI_MODEL = process.env.GEMINI_MODEL ?? "gemini-3.1-flash-lite";
 const GEMINI_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const GEMINI_URL = `${GEMINI_BASE}/models/${GEMINI_MODEL}:generateContent`;
 const GEMINI_CACHE_URL = `${GEMINI_BASE}/cachedContents`;
