@@ -97,7 +97,7 @@
     background: #FFFFFF;
     border-left: 2px solid var(--red-poppy-soft);
     display: flex; flex-direction: column;
-    padding: calc(24px + var(--chrome-top, env(safe-area-inset-top, 0px))) 20px 20px;
+    padding: calc(24px + max(env(safe-area-inset-top, 0px), var(--chrome-top, 0px))) 20px 20px;
     box-shadow: -8px 0 24px rgba(0,0,0,0.12);
     z-index: 50;
     overflow: hidden;
@@ -236,11 +236,12 @@
     margin-right: 0;
     transition: margin-right 0.3s ease;
     order: 1;
-    /* Push content below iOS status bar / Safari URL bar / Dynamic Island. The
-       --chrome-top variable is set by the head script using visualViewport.offsetTop,
-       which captures the URL bar in addition to the notch. Falls back to env()
-       on browsers without the visualViewport API. */
-    padding-top: var(--chrome-top, env(safe-area-inset-top, 0px));
+    /* Push content below iOS status bar / Safari URL bar / Dynamic Island.
+       --chrome-top is set by the head script from visualViewport.offsetTop (URL bar
+       overlap, dynamic). env(safe-area-inset-top) is the static notch / Dynamic
+       Island inset. We max() the two: when the URL bar minimizes mid-session the
+       JS value can drop to 0, but the notch is still there — env() keeps us safe. */
+    padding-top: max(env(safe-area-inset-top, 0px), var(--chrome-top, 0px));
   }
   .content-panel::-webkit-scrollbar { width: 8px; }
   .content-panel::-webkit-scrollbar-track { background: transparent; }
@@ -1044,7 +1045,7 @@
   /* ===== CLOSE BUTTON inside chat panel =====
      Visible by default (so it shows in the overlay), hidden at >=1400px. */
   .chat-close {
-    position: absolute; top: calc(12px + var(--chrome-top, env(safe-area-inset-top, 0px))); right: 12px;
+    position: absolute; top: calc(12px + max(env(safe-area-inset-top, 0px), var(--chrome-top, 0px))); right: 12px;
     z-index: 2;
     width: 36px; height: 36px;
     border-radius: 50%;
