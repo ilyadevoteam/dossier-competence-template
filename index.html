@@ -115,7 +115,8 @@
   .input-wrapper { margin-top: auto; padding-top: 16px; }
   .input-row { display: flex; gap: 8px; background: #F9FAFB; border: 1.5px solid #E5E7EB; border-radius: 12px; padding: 10px 12px; transition: border-color 0.18s ease; }
   .input-row:focus-within { border-color: var(--red-poppy); background: #FFFFFF; }
-  .input-row input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 14px; color: var(--text-dark); }
+  .input-row input { flex: 1; border: none; outline: none; background: transparent; font-family: inherit; font-size: 16px; color: var(--text-dark); }
+  /* font-size: 16px is required on inputs to prevent iOS Safari from auto-zooming on focus. */
   .input-row input::placeholder { color: var(--text-soft); }
   .send-button { background: var(--red-poppy); color: #FFFFFF; border: none; width: 32px; height: 32px; border-radius: 8px; cursor: pointer; display: grid; place-items: center; transition: transform 0.15s ease; flex-shrink: 0; }
   .send-button:hover:not(:disabled) { transform: translateX(2px); }
@@ -969,6 +970,10 @@
       width: 100vw;
       box-shadow: none;
     }
+    /* When the chat is open in fullscreen mode, paint the body white so any tiny
+       positioning glitch on iOS Safari (fixed elements vs. visual viewport when
+       the soft keyboard opens) doesn't expose the cream page background. */
+    body[data-chat="open"] { background: #FFFFFF; }
   }
 
   /* ===== FLOATING ACTION BUTTON (open chat) =====
@@ -1601,6 +1606,12 @@
 
   chatFab?.addEventListener('click', () => setChatState('open'));
   chatCloseBtn?.addEventListener('click', () => setChatState('closed'));
+
+  // Stop clicks originating inside the chat panel from bubbling to the document.
+  // Fixes an iOS Safari bug where tapping the Send button (or other in-panel button)
+  // triggered the outside-click handler and closed the chat — likely due to the
+  // soft keyboard closing mid-event and the click being retargeted by the layout shift.
+  chatbotPanelEl.addEventListener('click', (e) => e.stopPropagation());
 
   // Click anywhere outside the chat (= on the backdrop or the content behind it) closes it.
   document.addEventListener('click', (e) => {
