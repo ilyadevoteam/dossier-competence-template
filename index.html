@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Thomas Pastèque — Principal Product Owner IA &amp; Data · Dossier de compétence</title>
 <link href="./vendor/inter.css" rel="stylesheet">
 <script src="./vendor/marked.min.js" defer></script>
@@ -22,23 +22,6 @@
     catch (e) { return 'homme'; }
   })();
 
-  // Detect iOS Safari/Chrome URL-bar overlap (and notch / Dynamic Island when
-  // combined with viewport-fit=cover) by reading window.visualViewport.offsetTop.
-  // This is the vertical distance from the top of the layout viewport down to
-  // the first pixel the user can actually see — i.e. exactly what we need to
-  // pad the top of the content panel by so the Devoteam logo isn't hidden
-  // behind the browser chrome on initial load.
-  (function () {
-    if (!window.visualViewport) return;
-    function update() {
-      var off = Math.round(window.visualViewport.offsetTop);
-      document.documentElement.style.setProperty('--chrome-top', off + 'px');
-    }
-    update();
-    window.visualViewport.addEventListener('resize', update);
-    window.visualViewport.addEventListener('scroll', update);
-    window.addEventListener('orientationchange', update);
-  })();
 </script>
 <style>
   :root {
@@ -77,10 +60,15 @@
     background: var(--cream);
   }
 
-  /* Two-panel layout. Each panel scrolls independently — the browser routes wheel events
-     to whichever panel the cursor is over (overflow-y:auto on each child does this natively). */
-  html, body { height: 100vh; overflow: hidden; margin: 0; }
-  body { display: flex; }
+  /* Layout: body scrolls naturally (essential so iOS Safari can shrink the URL
+     bar on scroll — when body has overflow:hidden, iOS gets confused about whether
+     the page is scrollable and intermittently leaves content under the URL bar
+     after reload or after a chat+keyboard interaction).
+     The chat panel is position:fixed at all breakpoints (overlay on <1400px,
+     pinned to the right at >=1400px), so it floats above the body scroll. */
+  html, body { margin: 0; }
+  html { scroll-behavior: smooth; }
+  body { display: flex; min-height: 100vh; }
 
   /* ===== CHATBOT PANEL =====
      Position fixed at all breakpoints so the transform-based slide animation
@@ -97,7 +85,7 @@
     background: #FFFFFF;
     border-left: 2px solid var(--red-poppy-soft);
     display: flex; flex-direction: column;
-    padding: calc(24px + max(env(safe-area-inset-top, 0px), var(--chrome-top, 0px))) 20px 20px;
+    padding: 24px 20px 20px;
     box-shadow: -8px 0 24px rgba(0,0,0,0.12);
     z-index: 50;
     overflow: hidden;
@@ -229,19 +217,10 @@
   /* ===== RIGHT CONTENT PANEL (scrolly-telling) ===== */
   .content-panel {
     flex: 1;
-    height: 100vh;
-    overflow-y: auto;
     overflow-x: hidden;
-    scroll-behavior: smooth;
     margin-right: 0;
     transition: margin-right 0.3s ease;
     order: 1;
-    /* Push content below iOS status bar / Safari URL bar / Dynamic Island.
-       --chrome-top is set by the head script from visualViewport.offsetTop (URL bar
-       overlap, dynamic). env(safe-area-inset-top) is the static notch / Dynamic
-       Island inset. We max() the two: when the URL bar minimizes mid-session the
-       JS value can drop to 0, but the notch is still there — env() keeps us safe. */
-    padding-top: max(env(safe-area-inset-top, 0px), var(--chrome-top, 0px));
   }
   .content-panel::-webkit-scrollbar { width: 8px; }
   .content-panel::-webkit-scrollbar-track { background: transparent; }
@@ -1045,7 +1024,7 @@
   /* ===== CLOSE BUTTON inside chat panel =====
      Visible by default (so it shows in the overlay), hidden at >=1400px. */
   .chat-close {
-    position: absolute; top: calc(12px + max(env(safe-area-inset-top, 0px), var(--chrome-top, 0px))); right: 12px;
+    position: absolute; top: 12px; right: 12px;
     z-index: 2;
     width: 36px; height: 36px;
     border-radius: 50%;
