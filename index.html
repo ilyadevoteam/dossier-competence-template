@@ -21,6 +21,24 @@
     try { return localStorage.getItem('dossier-template-avatar-gender-v1') === 'femme' ? 'femme' : 'homme'; }
     catch (e) { return 'homme'; }
   })();
+
+  // Detect iOS Safari/Chrome URL-bar overlap (and notch / Dynamic Island when
+  // combined with viewport-fit=cover) by reading window.visualViewport.offsetTop.
+  // This is the vertical distance from the top of the layout viewport down to
+  // the first pixel the user can actually see — i.e. exactly what we need to
+  // pad the top of the content panel by so the Devoteam logo isn't hidden
+  // behind the browser chrome on initial load.
+  (function () {
+    if (!window.visualViewport) return;
+    function update() {
+      var off = Math.round(window.visualViewport.offsetTop);
+      document.documentElement.style.setProperty('--chrome-top', off + 'px');
+    }
+    update();
+    window.visualViewport.addEventListener('resize', update);
+    window.visualViewport.addEventListener('scroll', update);
+    window.addEventListener('orientationchange', update);
+  })();
 </script>
 <style>
   :root {
@@ -79,7 +97,7 @@
     background: #FFFFFF;
     border-left: 2px solid var(--red-poppy-soft);
     display: flex; flex-direction: column;
-    padding: calc(24px + env(safe-area-inset-top, 0px)) 20px 20px;
+    padding: calc(24px + var(--chrome-top, env(safe-area-inset-top, 0px))) 20px 20px;
     box-shadow: -8px 0 24px rgba(0,0,0,0.12);
     z-index: 50;
     overflow: hidden;
@@ -218,9 +236,11 @@
     margin-right: 0;
     transition: margin-right 0.3s ease;
     order: 1;
-    /* Push content below iOS status bar / Safari URL bar overlay (notch + Dynamic Island).
-       Combined with viewport-fit=cover, env() returns the safe inset on iOS; 0 elsewhere. */
-    padding-top: env(safe-area-inset-top, 0px);
+    /* Push content below iOS status bar / Safari URL bar / Dynamic Island. The
+       --chrome-top variable is set by the head script using visualViewport.offsetTop,
+       which captures the URL bar in addition to the notch. Falls back to env()
+       on browsers without the visualViewport API. */
+    padding-top: var(--chrome-top, env(safe-area-inset-top, 0px));
   }
   .content-panel::-webkit-scrollbar { width: 8px; }
   .content-panel::-webkit-scrollbar-track { background: transparent; }
@@ -352,23 +372,6 @@
   .gender-toggle.is-femme { background: #EC6FA5; }
   .gender-toggle svg { width: 26px; height: 26px; color: #FFFFFF; transition: transform 0.25s ease; }
   .gender-toggle:focus-visible { outline: 3px solid var(--red-poppy); outline-offset: 3px; }
-  .gender-toggle .gt-tooltip {
-    position: absolute;
-    bottom: calc(100% + 8px);
-    right: 0;
-    background: var(--text-dark);
-    color: #FFFFFF;
-    font-size: 11px;
-    font-weight: 600;
-    padding: 5px 10px;
-    border-radius: 8px;
-    white-space: nowrap;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.18s ease, transform 0.18s ease;
-    transform: translateY(4px);
-  }
-  .gender-toggle:hover .gt-tooltip { opacity: 1; transform: translateY(0); }
   .hero-avatar::after {
     content: '';
     position: absolute;
@@ -1041,7 +1044,7 @@
   /* ===== CLOSE BUTTON inside chat panel =====
      Visible by default (so it shows in the overlay), hidden at >=1400px. */
   .chat-close {
-    position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px;
+    position: absolute; top: calc(12px + var(--chrome-top, env(safe-area-inset-top, 0px))); right: 12px;
     z-index: 2;
     width: 36px; height: 36px;
     border-radius: 50%;
@@ -1145,8 +1148,7 @@
           <img class="pupil" src="./assets/avatar-portrait-pupille.png" alt=""/>
         </span>
       </div>
-      <button class="gender-toggle" id="gender-toggle" type="button" aria-label="Changer le genre du portrait" title="Changer le genre">
-        <span class="gt-tooltip" id="gt-tooltip">Passer en femme</span>
+      <button class="gender-toggle" id="gender-toggle" type="button" aria-label="Changer le genre du portrait">
         <svg id="gender-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"></svg>
       </button>
       <script>
@@ -1160,12 +1162,10 @@
           var img = document.getElementById('avatar-img');
           var btn = document.getElementById('gender-toggle');
           var icon = document.getElementById('gender-icon');
-          var tip = document.getElementById('gt-tooltip');
           img.src = './assets/avatar-portrait-' + g + '_white-eyes_transparent.png';
           img.alt = isFemme ? 'Portrait illustré (variante femme)' : 'Portrait illustré (variante homme)';
           btn.classList.toggle('is-femme', isFemme);
           icon.innerHTML = isFemme ? femaleIcon : maleIcon;
-          tip.textContent = isFemme ? 'Passer en homme' : 'Passer en femme';
           btn.setAttribute('aria-label', isFemme ? 'Variante femme active. Cliquer pour passer en homme.' : 'Variante homme active. Cliquer pour passer en femme.');
           // Swap any [data-text-m]/[data-text-f] elements already parsed (panel-title, agent-tag, hero name)
           var attr = isFemme ? 'textF' : 'textM';
@@ -1806,7 +1806,6 @@
   const avatarImgEl = document.getElementById('avatar-img');
   const genderToggleEl = document.getElementById('gender-toggle');
   const genderIconEl = document.getElementById('gender-icon');
-  const genderTooltipEl = document.getElementById('gt-tooltip');
 
   const MALE_ICON = '<circle cx="10" cy="14" r="5"/><line x1="13.5" y1="10.5" x2="20" y2="4"/><polyline points="15 4 20 4 20 9"/>';
   const FEMALE_ICON = '<circle cx="12" cy="9" r="5"/><line x1="12" y1="14" x2="12" y2="22"/><line x1="9" y1="19" x2="15" y2="19"/>';
@@ -1842,7 +1841,6 @@
     avatarImgEl.alt = isFemme ? 'Portrait illustré (variante femme)' : 'Portrait illustré (variante homme)';
     genderToggleEl.classList.toggle('is-femme', isFemme);
     genderIconEl.innerHTML = isFemme ? FEMALE_ICON : MALE_ICON;
-    genderTooltipEl.textContent = isFemme ? 'Passer en homme' : 'Passer en femme';
     genderToggleEl.setAttribute('aria-label', isFemme ? 'Variante femme active. Cliquer pour passer en homme.' : 'Variante homme active. Cliquer pour passer en femme.');
     applyGenderText(gender);
     try { localStorage.setItem(GENDER_KEY, gender); } catch {}
