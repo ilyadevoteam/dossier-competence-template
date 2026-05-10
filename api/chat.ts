@@ -198,11 +198,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse): 
   // Pass 1: primary model
   let attemptRes: AttemptResult = await attempt(GEMINI_MODEL, PRIMARY_TIMEOUT_MS, payload);
 
-  // Cache invalidation: retry once without cache on the same model
-  if (attemptRes.resp && !attemptRes.resp.ok) {
+  // Cache invalidation: retry once without cache on the same model.
+  // Triggered on any 4xx with cache used — covers 400 (bad cache ref after key rotation),
+  // 403 (cache from other project), 404 (cache deleted), 410 (cache expired server-side),
+  // or any error message mentioning "cache" / "expired" / "not found".
+  if (attemptRes.resp && !attemptRes.resp.ok && usedCache) {
+    const status = attemptRes.status;
     const errMsgLow = (attemptRes.errMsg || "").toLowerCase();
-    if (usedCache && (attemptRes.status === 404 || errMsgLow.includes("cachedcontent"))) {
-      console.warn(`[cache] invalidated by server, retrying without cache`);
+    const looksLikeCacheIssue =
+      status === 400 || status === 403 || status === 404 || status === 410 ||
+      errMsgLow.includes("cache") || errMsgLow.includes("expired") || errMsgLow.includes("not found");
+    if (looksLikeCacheIssue) {
+      console.warn(`[cache] suspect invalidation (status=${status} msg="${errMsgLow.slice(0, 100)}"), retrying without cache`);
       cacheName = null;
       cacheExpiresAt = 0;
       usedCache = false;
