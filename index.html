@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Thomas Pastèque — Principal Product Owner IA &amp; Data · Dossier de compétence</title>
 <link href="./vendor/inter.css" rel="stylesheet">
 <script src="./vendor/marked.min.js" defer></script>
@@ -79,7 +79,7 @@
     background: #FFFFFF;
     border-left: 2px solid var(--red-poppy-soft);
     display: flex; flex-direction: column;
-    padding: 24px 20px;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 20px 20px;
     box-shadow: -8px 0 24px rgba(0,0,0,0.12);
     z-index: 50;
     overflow: hidden;
@@ -218,6 +218,9 @@
     margin-right: 0;
     transition: margin-right 0.3s ease;
     order: 1;
+    /* Push content below iOS status bar / Safari URL bar overlay (notch + Dynamic Island).
+       Combined with viewport-fit=cover, env() returns the safe inset on iOS; 0 elsewhere. */
+    padding-top: env(safe-area-inset-top, 0px);
   }
   .content-panel::-webkit-scrollbar { width: 8px; }
   .content-panel::-webkit-scrollbar-track { background: transparent; }
@@ -1038,7 +1041,7 @@
   /* ===== CLOSE BUTTON inside chat panel =====
      Visible by default (so it shows in the overlay), hidden at >=1400px. */
   .chat-close {
-    position: absolute; top: 12px; right: 12px;
+    position: absolute; top: calc(12px + env(safe-area-inset-top, 0px)); right: 12px;
     z-index: 2;
     width: 36px; height: 36px;
     border-radius: 50%;
