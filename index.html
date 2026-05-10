@@ -73,10 +73,21 @@
     padding: 24px 20px;
     box-shadow: var(--shadow-soft);
     z-index: 30;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden;
     height: 100vh;
   }
+  /* Scrollable middle section: agent-header + prompts + chat-history.
+     Captain Moustache scrolls out of view as messages accumulate. */
+  .chat-scrollable {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 4px;
+    scroll-behavior: smooth;
+  }
+  .chat-scrollable::-webkit-scrollbar { width: 4px; }
+  .chat-scrollable::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 999px; }
   .panel-title { font-size: 22px; font-weight: 800; color: var(--text-dark); line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 4px; }
   .panel-title .accent { color: var(--red-poppy); }
   .panel-subtitle { font-size: 12px; font-weight: 500; color: var(--text-soft); margin-bottom: 24px; line-height: 1.4; }
@@ -101,12 +112,9 @@
   .input-row input:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* ===== CHAT HISTORY (WhatsApp-style) ===== */
-  .chat-history { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; max-height: 320px; overflow-y: auto; padding-right: 4px; scroll-behavior: smooth; }
+  .chat-history { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
   .chat-history:empty { display: none; }
   .chatbot-panel.chat-active .prompt-list { display: none; }
-  .chatbot-panel.chat-active .chat-history { max-height: none; flex: 1 1 auto; min-height: 0; margin-bottom: 8px; }
-  .chat-history::-webkit-scrollbar { width: 4px; }
-  .chat-history::-webkit-scrollbar-thumb { background: #E5E7EB; border-radius: 999px; }
   .chat-bubble { max-width: 85%; padding: 9px 13px; border-radius: 14px; font-size: 13px; line-height: 1.45; word-wrap: break-word; white-space: pre-wrap; animation: bubble-in 200ms ease-out; }
   .chat-bubble.user { align-self: flex-start; background: #F3F4F6; color: var(--text-dark); border-bottom-left-radius: 4px; }
   .chat-bubble.ai { align-self: flex-end; background: var(--red-poppy-soft); color: var(--text-dark); border-bottom-right-radius: 4px; border-left: 2px solid var(--red-poppy); }
@@ -898,21 +906,23 @@
   <div class="panel-title"><span class="accent" data-text-m="Thomas" data-text-f="Sarah">Thomas</span> Pastèque <span aria-hidden="true">🍉</span></div>
   <div class="panel-subtitle">Principal Product Owner IA · 11 ans d'expérience</div>
 
-  <div class="agent-header">
-    <img class="agent-avatar" src="./assets/super-cat-devoteam.png" alt="Captain Moustache Devoteam — assistant IA">
-    <div class="agent-name">Captain Moustache · Assistant IA</div>
-    <div class="agent-tag">Pose-moi une question sur <span data-text-m="Thomas" data-text-f="Sarah">Thomas</span></div>
-  </div>
+  <div class="chat-scrollable" id="chat-scrollable">
+    <div class="agent-header">
+      <img class="agent-avatar" src="./assets/super-cat-devoteam.png" alt="Captain Moustache Devoteam — assistant IA">
+      <div class="agent-name">Captain Moustache · Assistant IA</div>
+      <div class="agent-tag">Pose-moi une question sur <span data-text-m="Thomas" data-text-f="Sarah">Thomas</span></div>
+    </div>
 
-  <div class="prompt-list">
-    <div class="prompt-list-label">Suggestions</div>
-    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez TotalEnergies via Devoteam.">Expérience Devoteam · 2024+</button>
-    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez AXA France.">Expérience AXA · 2019-2023</button>
-    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez Orange Bank.">Expérience Orange Bank · 2016-2019</button>
-    <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez Decathlon.">Expérience Decathlon · 2014-2016</button>
-  </div>
+    <div class="prompt-list">
+      <div class="prompt-list-label">Suggestions</div>
+      <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez TotalEnergies via Devoteam.">Expérience Devoteam · 2024+</button>
+      <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez AXA France.">Expérience AXA · 2019-2023</button>
+      <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez Orange Bank.">Expérience Orange Bank · 2016-2019</button>
+      <button class="prompt-button" data-prompt-template="Résume-moi l'expérience de {name} chez Decathlon.">Expérience Decathlon · 2014-2016</button>
+    </div>
 
-  <div class="chat-history" id="chat-history"></div>
+    <div class="chat-history" id="chat-history"></div>
+  </div>
   <button class="clear-chat-btn" id="clear-chat-btn" type="button"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg>Supprimer l'historique</button>
 
   <div class="input-wrapper">
@@ -1390,6 +1400,7 @@
   const HISTORY_KEY = 'dossier-template-conversation-v1';
   const MAX_HISTORY_TURNS = 10;
   const chatHistoryEl = document.getElementById('chat-history');
+  const chatScrollEl = document.getElementById('chat-scrollable');
   const chatInput = document.getElementById('chat-input');
   const chatSend = document.getElementById('chat-send');
   const clearChatBtn = document.getElementById('clear-chat-btn');
@@ -1430,7 +1441,7 @@
     div.className = 'chat-bubble ' + role + (opts.error ? ' error' : '');
     div.innerHTML = lightMarkdown(text);
     chatHistoryEl.appendChild(div);
-    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+    chatScrollEl.scrollTop = chatScrollEl.scrollHeight;
     return div;
   }
 
@@ -1459,7 +1470,7 @@
     div.className = 'chat-bubble ai typing';
     div.innerHTML = '<span></span><span></span><span></span>';
     chatHistoryEl.appendChild(div);
-    chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+    chatScrollEl.scrollTop = chatScrollEl.scrollHeight;
     return div;
   }
 
