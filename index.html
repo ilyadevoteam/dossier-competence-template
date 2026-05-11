@@ -22,6 +22,25 @@
     catch (e) { return 'homme'; }
   })();
 
+  // Track the visual viewport so the chat panel can be anchored to exactly the
+  // visible area on iOS Safari. CSS variables --vv-top / --vv-height get fed
+  // into .chatbot-panel's top / height so the panel shrinks with the soft
+  // keyboard (no gap between the panel bottom and the keyboard top) and
+  // shifts down if the URL bar overlays the layout viewport.
+  (function () {
+    if (!window.visualViewport) return;
+    const root = document.documentElement.style;
+    function sync() {
+      const vv = window.visualViewport;
+      root.setProperty('--vv-top', vv.offsetTop + 'px');
+      root.setProperty('--vv-height', vv.height + 'px');
+    }
+    sync();
+    window.visualViewport.addEventListener('resize', sync);
+    window.visualViewport.addEventListener('scroll', sync);
+    window.addEventListener('orientationchange', sync);
+  })();
+
 </script>
 <style>
   :root {
@@ -78,10 +97,13 @@
      - at <1400px: opens on data-chat="open" */
   .chatbot-panel {
     position: fixed;
-    top: 0; right: 0; bottom: 0;
+    top: var(--vv-top, 0px);
+    right: 0;
+    bottom: auto;
     width: var(--panel-w);
     height: 100vh;
     height: 100dvh;
+    height: var(--vv-height, 100dvh);
     background: #FFFFFF;
     border-left: 2px solid var(--red-poppy-soft);
     display: flex; flex-direction: column;
@@ -931,7 +953,17 @@
       background: rgba(15, 23, 42, 0.32);
       z-index: 40;
     }
-    body[data-chat="open"] .content-panel { overflow: hidden; }
+    /* iOS-safe body scroll lock: position-fix the body with a saved top offset.
+       overflow:hidden alone isn't reliable on iOS once the keyboard opens (the
+       focused input scrolls the layout viewport, pulling the panel up and
+       exposing the page underneath). The saved offset is set by JS in setChatState. */
+    body[data-chat="open"] {
+      position: fixed;
+      left: 0;
+      right: 0;
+      width: 100%;
+      overflow: hidden;
+    }
   }
 
   /* ===== CHAT FULLSCREEN (< 800px, mobile) ===== */
@@ -1548,9 +1580,39 @@
   const chatCloseBtn = document.getElementById('chat-close');
   const OVERLAY_BP = 1400;
 
+  // iOS-safe scroll lock state: scrollY saved at chat open, restored at close.
+  let _lockedScrollY = 0;
+
+  function lockBodyScroll() {
+    _lockedScrollY = window.scrollY || window.pageYOffset || 0;
+    document.body.style.top = `-${_lockedScrollY}px`;
+  }
+  function unlockBodyScroll() {
+    document.body.style.top = '';
+    // Use behavior:'instant' to bypass the global `html { scroll-behavior: smooth }`,
+    // otherwise the scroll restore animates from 0 to the saved Y and the user
+    // sees the page briefly jump to the top.
+    window.scrollTo({ top: _lockedScrollY, left: 0, behavior: 'instant' });
+    _lockedScrollY = 0;
+  }
+
   function setChatState(state, opts = {}) {
     const wasOpen = document.body.dataset.chat === 'open';
+
+    if (state === 'open' && !wasOpen && window.innerWidth < OVERLAY_BP) {
+      // Lock the body BEFORE setting data-chat so the CSS rule kicks in with
+      // the offset already in place — no flash.
+      lockBodyScroll();
+    }
+
     document.body.dataset.chat = state;
+
+    if (state === 'closed' && wasOpen && window.innerWidth < OVERLAY_BP) {
+      // Unlock AFTER the CSS rule unsets, so the scroll restore lands the user
+      // at the same visual position they had before opening the chat.
+      unlockBodyScroll();
+    }
+
     if (state === 'open' && !wasOpen) {
       // Auto-focus the input on tablet (>=800 && <1400). Skip on mobile to avoid
       // popping the soft keyboard before the user has read anything.
