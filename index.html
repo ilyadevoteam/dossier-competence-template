@@ -22,22 +22,21 @@
     catch (e) { return 'homme'; }
   })();
 
-  // Track the visual viewport so the chat panel can be anchored to exactly the
-  // visible area on iOS Safari. CSS variables --vv-top / --vv-height get fed
-  // into .chatbot-panel's top / height so the panel shrinks with the soft
-  // keyboard (no gap between the panel bottom and the keyboard top) and
-  // shifts down if the URL bar overlays the layout viewport.
+  // Track the visual viewport HEIGHT so .chatbot-panel can shrink with the iOS
+  // soft keyboard (no gap between panel bottom and keyboard top).
+  // We deliberately do NOT track visualViewport.offsetTop here — iOS Safari can
+  // shift offsetTop > 0 when the keyboard opens on a body that's scroll-locked,
+  // which would push the panel down and open a gap ABOVE it. We don't use
+  // viewport-fit=cover, so the layout viewport already sits below the URL bar
+  // by default — offsetTop tracking is unnecessary and actively harmful here.
   (function () {
     if (!window.visualViewport) return;
     const root = document.documentElement.style;
     function sync() {
-      const vv = window.visualViewport;
-      root.setProperty('--vv-top', vv.offsetTop + 'px');
-      root.setProperty('--vv-height', vv.height + 'px');
+      root.setProperty('--vv-height', window.visualViewport.height + 'px');
     }
     sync();
     window.visualViewport.addEventListener('resize', sync);
-    window.visualViewport.addEventListener('scroll', sync);
     window.addEventListener('orientationchange', sync);
   })();
 
@@ -97,7 +96,7 @@
      - at <1400px: opens on data-chat="open" */
   .chatbot-panel {
     position: fixed;
-    top: var(--vv-top, 0px);
+    top: 0;
     right: 0;
     bottom: auto;
     width: var(--panel-w);
