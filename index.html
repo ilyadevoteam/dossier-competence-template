@@ -559,105 +559,114 @@
   .journey-intro .section-title { font-size: 36px; }
   .journey-intro p { color: var(--text-soft); font-size: 17px; max-width: 600px; margin: 12px auto 0; line-height: 1.6; }
 
+  /* Cards share a clean white background. The card identity comes from the year
+     range on the left + the company name on the right — no per-card tint. */
   .experience-card {
-    margin: 0 auto 32px;
-    max-width: 980px;
-    border-radius: 28px;
-    padding: 56px 56px;
-    display: grid;
-    grid-template-columns: 200px 1fr;
-    gap: 48px;
-    align-items: start;
+    margin: 0 auto 28px;
+    max-width: 920px;
+    border-radius: 24px;
+    padding: clamp(28px, 3.5vw, 48px);
+    background: #FFFFFF;
     box-shadow: 0 12px 32px rgba(31, 41, 55, 0.06);
     opacity: 0;
     transform: translateY(40px);
     transition: opacity 0.6s ease, transform 0.6s ease;
     position: relative;
     overflow: hidden;
+    display: grid;
+    grid-template-columns: clamp(120px, 16vw, 180px) 1fr;
+    gap: clamp(24px, 3.5vw, 48px);
+    align-items: start;
   }
-  .experience-card.visible {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  .experience-card.theme-sage    { background: var(--sage); }
-  .experience-card.theme-cream   { background: var(--cream-deep); }
-  .experience-card.theme-mint    { background: var(--fresh-mint-soft); }
-  .experience-card.theme-lavender { background: var(--lavender); }
-  .experience-card.theme-axa-blue { background: var(--axa-blue); }
-  .experience-card.theme-orange-pop { background: var(--orange-pop); }
-  .experience-card.theme-total-red { background: var(--total-red); }
-  .experience-card.theme-decathlon-violet { background: var(--decathlon-violet); }
+  .experience-card.visible { opacity: 1; transform: translateY(0); }
 
-  .exp-year-block { display: flex; flex-direction: column; gap: 4px; }
-  .exp-year { font-size: 56px; font-weight: 900; letter-spacing: -0.04em; line-height: 0.9; color: var(--text-dark); }
-  .exp-period { font-size: 13px; font-weight: 600; color: var(--text-soft); }
-  .exp-company { font-size: 28px; font-weight: 800; letter-spacing: -0.02em; color: var(--text-dark); margin-bottom: 4px; }
-  .exp-role { font-size: 15px; font-weight: 600; color: var(--red-poppy); margin-bottom: 20px; }
+  .exp-year-block {
+    display: flex;
+    flex-direction: column;
+  }
+  .exp-year {
+    font-size: clamp(44px, 6vw, 76px);
+    font-weight: 900;
+    letter-spacing: -0.04em;
+    line-height: 1;
+    color: var(--red-poppy);
+    opacity: 0.22;
+    user-select: none;
+  }
+  .exp-duration {
+    margin-top: 14px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-soft);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .exp-company {
+    font-size: clamp(22px, 2.8vw, 30px);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    color: var(--text-dark);
+    margin-bottom: 6px;
+    line-height: 1.15;
+  }
+  .exp-role {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--red-poppy);
+    margin-bottom: 24px;
+  }
   .exp-metric {
     display: inline-block;
-    background: var(--red-poppy);
-    color: #FFFFFF;
-    padding: 10px 20px;
-    border-radius: 999px;
-    font-size: 15px;
-    font-weight: 800;
-    margin-bottom: 24px;
-    box-shadow: 0 4px 12px rgba(248, 72, 94, 0.25);
-  }
-  .experience-card.theme-mint .exp-metric { background: #0F9D6E; box-shadow: 0 4px 12px rgba(15, 157, 110, 0.25); }
-  .experience-card.theme-lavender .exp-metric { background: #6E5CC4; box-shadow: 0 4px 12px rgba(110, 92, 196, 0.25); }
-  .experience-card.theme-axa-blue .exp-metric { background: var(--axa-blue-deep); box-shadow: 0 4px 12px rgba(30, 58, 138, 0.25); }
-  .experience-card.theme-orange-pop .exp-metric { background: var(--orange-pop-deep); box-shadow: 0 4px 12px rgba(234, 88, 12, 0.25); }
-  .experience-card.theme-total-red .exp-metric { background: var(--total-red-deep); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25); }
-  .experience-card.theme-decathlon-violet .exp-metric { background: var(--decathlon-violet-deep); box-shadow: 0 4px 12px rgba(109, 40, 217, 0.25); }
-  .exp-description { font-size: 15px; line-height: 1.65; color: var(--text-dark); margin-bottom: 20px; max-width: 580px; }
-  .exp-stack { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
-  .exp-stack .chip {
-    background: rgba(255, 255, 255, 0.7);
+    background: #F3F4F6;
     color: var(--text-dark);
-    padding: 5px 12px;
+    padding: 10px 22px;
     border-radius: 999px;
-    font-size: 12px;
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 28px;
+  }
+  .exp-description {
+    font-size: 15px;
+    line-height: 1.7;
+    color: var(--text-soft);
+    margin-bottom: 28px;
+    max-width: 720px;
+  }
+  .exp-stack {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 36px;
+  }
+  .exp-stack .chip {
+    background: #F3F4F6;
+    color: var(--text-dark);
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-size: 13px;
     font-weight: 600;
-    border: 1px solid rgba(31, 41, 55, 0.08);
   }
   .exp-cta {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
-    background: rgba(31, 41, 55, 0.92);
+    gap: 10px;
+    background: var(--red-poppy);
     color: #FFFFFF;
     border: none;
-    padding: 12px 22px;
+    padding: 14px 26px;
     border-radius: 999px;
     font-family: inherit;
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     cursor: pointer;
     transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
-    box-shadow: 0 4px 12px rgba(31, 41, 55, 0.18);
+    box-shadow: 0 6px 16px rgba(248, 72, 94, 0.32);
   }
-  .exp-cta:hover { transform: translateY(-1px); background: var(--text-dark); box-shadow: 0 6px 16px rgba(31, 41, 55, 0.28); }
+  .exp-cta:hover { transform: translateY(-1px); background: #E63950; box-shadow: 0 10px 22px rgba(248, 72, 94, 0.42); }
   .exp-cta:active { transform: translateY(0); }
   .exp-cta svg { width: 14px; height: 14px; transition: transform 0.18s ease; }
   .exp-cta:hover svg { transform: translateX(3px); }
-  .experience-card.theme-mint .exp-cta     { background: #0F9D6E; box-shadow: 0 4px 12px rgba(15, 157, 110, 0.3); }
-  .experience-card.theme-mint .exp-cta:hover { background: #0C8C62; }
-  .experience-card.theme-lavender .exp-cta { background: #6E5CC4; box-shadow: 0 4px 12px rgba(110, 92, 196, 0.3); }
-  .experience-card.theme-lavender .exp-cta:hover { background: #5C4BAC; }
-  .experience-card.theme-cream .exp-cta    { background: #B8954A; box-shadow: 0 4px 12px rgba(184, 149, 74, 0.3); }
-  .experience-card.theme-cream .exp-cta:hover { background: #A38040; }
-  .experience-card.theme-sage .exp-cta     { background: #4A8757; box-shadow: 0 4px 12px rgba(74, 135, 87, 0.3); }
-  .experience-card.theme-sage .exp-cta:hover { background: #3E7349; }
-  .experience-card.theme-axa-blue .exp-cta { background: var(--axa-blue-deep); box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3); }
-  .experience-card.theme-axa-blue .exp-cta:hover { background: #16307A; }
-  .experience-card.theme-orange-pop .exp-cta { background: var(--orange-pop-deep); box-shadow: 0 4px 12px rgba(234, 88, 12, 0.3); }
-  .experience-card.theme-orange-pop .exp-cta:hover { background: #C7480A; }
-  .experience-card.theme-total-red .exp-cta { background: var(--total-red-deep); box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3); }
-  .experience-card.theme-total-red .exp-cta:hover { background: #B91C1C; }
-  .experience-card.theme-decathlon-violet .exp-cta { background: var(--decathlon-violet-deep); box-shadow: 0 4px 12px rgba(109, 40, 217, 0.3); }
-  .experience-card.theme-decathlon-violet .exp-cta:hover { background: #5B21B6; }
 
   /* ===== EXPERIENCE DETAIL MODAL ===== */
   .exp-modal-overlay {
@@ -686,20 +695,14 @@
     transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
   }
   .exp-modal-overlay.visible .exp-modal-card { transform: scale(1) translateY(0); }
+  /* Modal header — uniformly cream across all experiences. The per-card identity
+     is carried by the year, company name and content, not by tinted backgrounds. */
   .exp-modal-header {
     padding: 32px 36px 28px;
     position: relative;
     background: var(--cream-deep);
     border-bottom: 4px solid var(--text-dark);
   }
-  .exp-modal-overlay[data-theme="sage"] .exp-modal-header     { background: var(--sage); border-bottom-color: #4A8757; }
-  .exp-modal-overlay[data-theme="cream"] .exp-modal-header    { background: var(--cream-deep); border-bottom-color: #B8954A; }
-  .exp-modal-overlay[data-theme="mint"] .exp-modal-header     { background: var(--fresh-mint-soft); border-bottom-color: #0F9D6E; }
-  .exp-modal-overlay[data-theme="lavender"] .exp-modal-header { background: var(--lavender); border-bottom-color: #6E5CC4; }
-  .exp-modal-overlay[data-theme="axa-blue"] .exp-modal-header { background: var(--axa-blue); border-bottom-color: var(--axa-blue-deep); }
-  .exp-modal-overlay[data-theme="orange-pop"] .exp-modal-header { background: var(--orange-pop); border-bottom-color: var(--orange-pop-deep); }
-  .exp-modal-overlay[data-theme="total-red"] .exp-modal-header { background: var(--total-red); border-bottom-color: var(--total-red-deep); }
-  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-modal-header { background: var(--decathlon-violet); border-bottom-color: var(--decathlon-violet-deep); }
 
   .exp-modal-year-block { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; }
   .exp-modal-year { font-size: 44px; font-weight: 900; letter-spacing: -0.04em; line-height: 1; color: var(--text-dark); }
@@ -747,17 +750,9 @@
   .exp-section-title::before {
     content: '';
     width: 4px; height: 14px;
-    background: var(--text-dark);
+    background: var(--red-poppy);
     border-radius: 2px;
   }
-  .exp-modal-overlay[data-theme="sage"] .exp-section-title::before     { background: #4A8757; }
-  .exp-modal-overlay[data-theme="cream"] .exp-section-title::before    { background: #B8954A; }
-  .exp-modal-overlay[data-theme="mint"] .exp-section-title::before     { background: #0F9D6E; }
-  .exp-modal-overlay[data-theme="lavender"] .exp-section-title::before { background: #6E5CC4; }
-  .exp-modal-overlay[data-theme="axa-blue"] .exp-section-title::before { background: var(--axa-blue-deep); }
-  .exp-modal-overlay[data-theme="orange-pop"] .exp-section-title::before { background: var(--orange-pop-deep); }
-  .exp-modal-overlay[data-theme="total-red"] .exp-section-title::before { background: var(--total-red-deep); }
-  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-section-title::before { background: var(--decathlon-violet-deep); }
 
   .exp-section p { font-size: 14px; line-height: 1.65; color: var(--text-dark); }
   .exp-section ul { list-style: none; padding: 0; margin: 0; }
@@ -774,33 +769,17 @@
     left: 0; top: 14px;
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: var(--text-dark);
+    background: var(--red-poppy);
   }
-  .exp-modal-overlay[data-theme="sage"] .exp-section li::before     { background: #4A8757; }
-  .exp-modal-overlay[data-theme="cream"] .exp-section li::before    { background: #B8954A; }
-  .exp-modal-overlay[data-theme="mint"] .exp-section li::before     { background: #0F9D6E; }
-  .exp-modal-overlay[data-theme="lavender"] .exp-section li::before { background: #6E5CC4; }
-  .exp-modal-overlay[data-theme="axa-blue"] .exp-section li::before { background: var(--axa-blue-deep); }
-  .exp-modal-overlay[data-theme="orange-pop"] .exp-section li::before { background: var(--orange-pop-deep); }
-  .exp-modal-overlay[data-theme="total-red"] .exp-section li::before { background: var(--total-red-deep); }
-  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-section li::before { background: var(--decathlon-violet-deep); }
 
   .exp-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 600px) { .exp-metrics { grid-template-columns: 1fr; } }
   .exp-metric-card {
-    background: var(--cream);
+    background: var(--cream-deep);
     border-radius: 14px;
     padding: 14px 16px;
     border: 1px solid rgba(31, 41, 55, 0.06);
   }
-  .exp-modal-overlay[data-theme="sage"] .exp-metric-card     { background: var(--sage); border-color: rgba(74, 135, 87, 0.18); }
-  .exp-modal-overlay[data-theme="cream"] .exp-metric-card    { background: var(--cream-deep); border-color: rgba(184, 149, 74, 0.18); }
-  .exp-modal-overlay[data-theme="mint"] .exp-metric-card     { background: var(--fresh-mint-soft); border-color: rgba(15, 157, 110, 0.18); }
-  .exp-modal-overlay[data-theme="lavender"] .exp-metric-card { background: var(--lavender); border-color: rgba(110, 92, 196, 0.18); }
-  .exp-modal-overlay[data-theme="axa-blue"] .exp-metric-card { background: var(--axa-blue); border-color: rgba(30, 58, 138, 0.18); }
-  .exp-modal-overlay[data-theme="orange-pop"] .exp-metric-card { background: var(--orange-pop); border-color: rgba(234, 88, 12, 0.18); }
-  .exp-modal-overlay[data-theme="total-red"] .exp-metric-card { background: var(--total-red); border-color: rgba(220, 38, 38, 0.18); }
-  .exp-modal-overlay[data-theme="decathlon-violet"] .exp-metric-card { background: var(--decathlon-violet); border-color: rgba(109, 40, 217, 0.18); }
   .exp-metric-value { font-size: 22px; font-weight: 900; letter-spacing: -0.02em; color: var(--text-dark); line-height: 1.1; }
   .exp-metric-label { font-size: 12px; color: var(--text-soft); margin-top: 4px; line-height: 1.4; }
 
@@ -821,6 +800,8 @@
     grid-template-columns: 1fr;
     gap: 20px;
   }
+  /* Skill cards: uniformly white. Theme classes remain on the markup (inert)
+     in case a project re-introduces tints, but the default is monochrome. */
   .skill-category {
     background: #FFFFFF;
     border: var(--border-soft);
@@ -828,10 +809,6 @@
     padding: 28px 32px;
     box-shadow: var(--shadow-soft);
   }
-  .skill-category.theme-red    { background: var(--red-poppy-soft); border-color: rgba(248, 72, 94, 0.2); }
-  .skill-category.theme-mint   { background: var(--fresh-mint-soft); border-color: rgba(34, 214, 155, 0.2); }
-  .skill-category.theme-cream  { background: var(--cream-deep); border-color: rgba(241, 231, 212, 0.6); }
-  .skill-category.theme-lavender { background: var(--lavender); border-color: rgba(191, 179, 224, 0.5); }
   .skill-cat-title { font-size: 18px; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 14px; display: flex; align-items: center; gap: 10px; }
   .skill-cat-title .icon { color: var(--red-poppy); display: inline-flex; align-items: center; }
   /* Shared SVG icon style — Lucide-style line icons in red poppy */
@@ -916,9 +893,22 @@
     .hero .tagline { order: 6; }
     .hero .hero-stats { order: 7; }
     .section { padding: 60px 32px; }
-    .experience-card { grid-template-columns: 1fr; padding: 36px 28px; gap: 20px; }
-    .exp-year { font-size: 44px; }
     .ed-cert-grid { grid-template-columns: 1fr; }
+    /* On narrow viewports the 2-column card folds: year block sits on a row above
+       the content (years side-by-side instead of stacked, duration beside them). */
+    .experience-card {
+      grid-template-columns: 1fr;
+      gap: 18px;
+      padding: 32px 24px;
+    }
+    .exp-year-block {
+      flex-direction: row;
+      align-items: baseline;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .exp-year { font-size: 48px; }
+    .exp-duration { margin-top: 0; align-self: center; }
   }
   /* ===== DESKTOP (>=1400px) =====
      Chat is always visible. Content reserves 540px on the right via margin-right
@@ -1219,8 +1209,9 @@
   <section style="padding-bottom: 40px;">
     <article class="experience-card theme-total-red" data-exp-id="devoteam" data-sector="energie">
       <div class="exp-year-block">
+        <div class="exp-year">2026</div>
         <div class="exp-year">2024</div>
-        <div class="exp-period">2024 — aujourd'hui</div>
+        <div class="exp-duration">2 ans +</div>
       </div>
       <div>
         <div class="exp-company">TotalEnergies · Devoteam</div>
@@ -1247,8 +1238,9 @@
 
     <article class="experience-card theme-axa-blue" data-exp-id="axa" data-sector="assurance">
       <div class="exp-year-block">
+        <div class="exp-year">2023</div>
         <div class="exp-year">2019</div>
-        <div class="exp-period">2019 — 2023</div>
+        <div class="exp-duration">4 ans 4 mois</div>
       </div>
       <div>
         <div class="exp-company">AXA France</div>
@@ -1274,8 +1266,9 @@
 
     <article class="experience-card theme-orange-pop" data-exp-id="orangebank" data-sector="banque">
       <div class="exp-year-block">
+        <div class="exp-year">2019</div>
         <div class="exp-year">2016</div>
-        <div class="exp-period">2016 — 2019</div>
+        <div class="exp-duration">2 ans 11 mois</div>
       </div>
       <div>
         <div class="exp-company">Orange Bank</div>
@@ -1301,8 +1294,9 @@
 
     <article class="experience-card theme-decathlon-violet" data-exp-id="decathlon" data-sector="retail">
       <div class="exp-year-block">
+        <div class="exp-year">2016</div>
         <div class="exp-year">2014</div>
-        <div class="exp-period">2014 — 2016</div>
+        <div class="exp-duration">2 ans 8 mois</div>
       </div>
       <div>
         <div class="exp-company">Decathlon</div>
@@ -1463,7 +1457,7 @@
             <div class="ico"><svg class="lucide" viewBox="0 0 24 24" aria-hidden="true"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .962L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></svg></div>
             <div>
               <div class="label">Devoteam Generative AI Certified (Level 2)</div>
-              <div class="meta">Devoteam · Utilisation avancée de l'IA Générative</div>
+              <div class="meta">Utilisation avancée des outils d'IA Générative</div>
             </div>
           </div>
         </div>
@@ -1492,7 +1486,6 @@
         </svg>
       </button>
       <div class="exp-modal-year-block">
-        <div class="exp-modal-year" id="exp-modal-year">2024</div>
         <div class="exp-modal-period" id="exp-modal-period">2024 — aujourd'hui</div>
       </div>
       <div class="exp-modal-company" id="exp-modal-company">TotalEnergies · Devoteam</div>
@@ -2025,7 +2018,6 @@
 
   const expModalEl = document.getElementById('exp-modal');
   const expModalClose = document.getElementById('exp-modal-close');
-  const expModalYear = document.getElementById('exp-modal-year');
   const expModalPeriod = document.getElementById('exp-modal-period');
   const expModalCompany = document.getElementById('exp-modal-company');
   const expModalRole = document.getElementById('exp-modal-role');
@@ -2049,7 +2041,6 @@
     const data = EXPERIENCES[expId];
     if (!data) return;
     expModalEl.dataset.theme = data.theme;
-    expModalYear.textContent = data.year;
     expModalPeriod.textContent = data.period;
     expModalCompany.textContent = data.company;
     expModalRole.textContent = applyAccord(data.role);
