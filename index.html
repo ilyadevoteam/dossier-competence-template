@@ -595,7 +595,7 @@
   }
   .exp-duration {
     margin-top: 14px;
-    font-size: 11px;
+    font-size: 16px;
     font-weight: 700;
     color: var(--text-soft);
     letter-spacing: 0.14em;
@@ -894,21 +894,15 @@
     .hero .hero-stats { order: 7; }
     .section { padding: 60px 32px; }
     .ed-cert-grid { grid-template-columns: 1fr; }
-    /* On narrow viewports the 2-column card folds: year block sits on a row above
-       the content (years side-by-side instead of stacked, duration beside them). */
+    /* On narrow viewports the 2-column card folds. Years are hidden — the
+       duration alone keeps the timeline information readable without crowding. */
     .experience-card {
       grid-template-columns: 1fr;
-      gap: 18px;
+      gap: 12px;
       padding: 32px 24px;
     }
-    .exp-year-block {
-      flex-direction: row;
-      align-items: baseline;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .exp-year { font-size: 48px; }
-    .exp-duration { margin-top: 0; align-self: center; }
+    .exp-year { display: none; }
+    .exp-duration { margin-top: 0; font-size: 14px; }
   }
   /* ===== DESKTOP (>=1400px) =====
      Chat is always visible. Content reserves 540px on the right via margin-right
