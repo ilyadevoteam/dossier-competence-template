@@ -21,6 +21,29 @@
     try { return localStorage.getItem('dossier-template-avatar-gender-v1') === 'femme' ? 'femme' : 'homme'; }
     catch (e) { return 'homme'; }
   })();
+
+  // Anchor the chat panel to the visual viewport (not the layout viewport).
+  // iOS Safari overlays its URL bar on top of the layout viewport: position:fixed
+  // top:0 starts BEHIND the URL bar but 100dvh excludes it, leaving a URL-bar-sized
+  // gap at the bottom of the panel above the keyboard. We expose --vv-top and
+  // --vv-height for .chatbot-panel to consume.
+  //
+  // We deliberately do NOT lock the body (no position:fixed on body). If we did,
+  // iOS would shift the layout viewport itself to bring the focused input on
+  // screen, which would make visualViewport.offsetTop fluctuate during keyboard
+  // open and cause the panel to jump down (the "gap above" bug from earlier).
+  (function () {
+    if (!window.visualViewport) return;
+    const root = document.documentElement.style;
+    function sync() {
+      const vv = window.visualViewport;
+      root.setProperty('--vv-top', vv.offsetTop + 'px');
+      root.setProperty('--vv-height', vv.height + 'px');
+    }
+    sync();
+    window.visualViewport.addEventListener('resize', sync);
+    window.addEventListener('orientationchange', sync);
+  })();
 </script>
 <style>
   :root {
@@ -77,10 +100,13 @@
      - at <1400px: opens on data-chat="open" */
   .chatbot-panel {
     position: fixed;
-    top: 0; right: 0; bottom: 0;
+    top: var(--vv-top, 0px);
+    right: 0;
+    bottom: auto;
     width: var(--panel-w);
     height: 100vh;
     height: 100dvh;
+    height: var(--vv-height, 100dvh);
     background: #FFFFFF;
     border-left: 2px solid var(--red-poppy-soft);
     display: flex; flex-direction: column;
